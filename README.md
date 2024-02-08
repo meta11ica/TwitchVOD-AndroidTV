@@ -67,9 +67,6 @@ Feel free to open an issue in case of a problem.
 * 1.0
     * Initial Release : Very quick and very dirty
 
-## License
-
-This project is licensed under the [MIT] License - see the LICENSE.md file for details
 
 ## Acknowledgments
 
