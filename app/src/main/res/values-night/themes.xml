@@ -1,0 +1,8 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Theme.TwitchVOD" parent="@style/Theme.Leanback" />
+        <!-- Customize your dark theme here. -->
+        <!-- <item name="colorPrimary">@color/my_dark_primary</item> -->
+
+    <style name="SplashScreenTheme" parent="@style/Theme.Leanback" />
+</resources>

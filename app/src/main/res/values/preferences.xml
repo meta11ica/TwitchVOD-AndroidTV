@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+        <string name="basic_preferences">Personal Settings</string>
+    <string name="title_basic_preference">Basic Preference</string>
+    <string name="summary_basic_preference">summary_basic_preference</string>
+    <string name="title_stylish_preference">title_stylish_preference</string>
+    <string name="summary_stylish_preference">summary_stylish_preference</string>
+    <string name="title_icon_preference">title_icon_preference</string>
+    <string name="summary_icon_preference">summary_icon_preference</string>
+    <string name="title_single_line_title_preference">title_single_line_title_preference</string>
+    <string name="summary_single_line_title_preference">summary_single_line_title_preference</string>
+    <string name="widgets">widgets</string>
+    <string name="title_checkbox_preference">title_checkbox_preference</string>
+    <string name="title_switch_preference">title_switch_preference</string>
+    <string name="summary_intent_preference">summary_intent_preference</string>
+    <string name="title_parent_preference">title_parent_preference</string>
+    <string name="summary_checkbox_preference">summary_checkbox_preference</string>
+    <string name="summary_switch_preference">summary_switch_preference</string>
+    <string name="title_dropdown_preference">title_dropdown_preference</string>
+    <string name="title_seekbar_preference">title_seekbar_preference</string>
+    <string name="dialogs">dialogs</string>
+    <string name="title_edittext_preference">title_edittext_preference</string>
+    <string name="dialog_title_edittext_preference">dialog_title_edittext_preference</string>
+    <string name="title_list_preference">title_list_preference</string>
+    <string name="dialog_title_list_preference">dialog_title_list_preference</string>
+    <string name="title_multi_list_preference">title_multi_list_preference</string>
+    <string name="summary_multi_list_preference">summary_multi_list_preference</string>
+    <string name="dialog_title_multi_list_preference">dialog_title_multi_list_preference</string>
+    <string name="advanced_attributes">advanced_attributes</string>
+    <string name="title_expandable_preference">title_expandable_preference</string>
+    <string name="summary_expandable_preference">summary_expandable_preference</string>
+    <string name="title_intent_preference">title_intent_preference</string>
+    <string name="summary_parent_preference">summary_parent_preference</string>
+    <string name="title_child_preference">title_child_preference</string>
+    <string name="summary_child_preference">summary_child_preference</string>
+    <string name="title_toggle_summary_preference">title_toggle_summary_preference</string>
+    <string name="summary_on_toggle_summary_preference">summary_on_toggle_summary_preference</string>
+    <string name="summary_off_toggle_summary_preference">summary_off_toggle_summary_preference</string>
+    <string name="title_copyable_preference">title_copyable_preference</string>
+    <string name="summary_copyable_preference">summary_copyable_preference</string>
+</resources>

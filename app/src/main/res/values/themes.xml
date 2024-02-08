@@ -1,0 +1,9 @@
+<resources>
+    <style name="SplashScreen" parent="@style/Theme.AppCompat.NoActionBar" />
+    <style name="Base.Theme.TwitchVOD" parent="@style/Theme.Leanback" />
+
+    <style name="SplashScreenTheme" parent="@style/Theme.Leanback" />
+
+    <style name="Theme.TwitchVOD" parent="@style/Theme.Leanback" />
+    <!-- Base application theme. -->
+</resources>
