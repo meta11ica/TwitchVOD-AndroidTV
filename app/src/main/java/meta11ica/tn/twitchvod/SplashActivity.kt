@@ -1,4 +1,4 @@
-package com.example.twitchvod
+package meta11ica.tn.twitchvod
 
 import android.content.Intent
 import android.os.Bundle
@@ -7,7 +7,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import com.example.twitchvod.databinding.ActivitySplashBinding
+import meta11ica.tn.twitchvod.databinding.ActivitySplashBinding
 import khttp.get
 import khttp.post
 import kotlinx.coroutines.launch

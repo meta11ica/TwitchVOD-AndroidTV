@@ -1,4 +1,4 @@
-package com.example.twitchvod
+package meta11ica.tn.twitchvod
 
 import android.content.Context
 import android.media.session.PlaybackState.*
@@ -7,7 +7,7 @@ import androidx.leanback.media.MediaPlayerAdapter
 
 class BasicMediaPlayerAdapter(context: Context) : MediaPlayerAdapter(context) {
 
-    val playlist = ArrayList<Movie>()
+    val playlist = ArrayList<meta11ica.tn.twitchvod.Movie>()
     var playlistPosition = 0
         private set
 

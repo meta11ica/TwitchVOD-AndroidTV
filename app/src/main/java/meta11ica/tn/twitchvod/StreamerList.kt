@@ -1,9 +1,6 @@
-package com.example.twitchvod
+package meta11ica.tn.twitchvod
 import android.content.SharedPreferences
 import khttp.post
-import khttp.responses.Response
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
 import org.json.JSONArray
 import org.json.JSONObject
 

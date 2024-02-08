@@ -1,13 +1,11 @@
-package com.example.twitchvod
+package meta11ica.tn.twitchvod
 
 import android.text.method.LinkMovementMethod
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import android.widget.Toast
-import androidx.leanback.widget.ListRowPresenter
 import androidx.leanback.widget.Presenter
 
 class TextPresenter : Presenter() {

@@ -1,4 +1,4 @@
-package com.example.twitchvod
+package meta11ica.tn.twitchvod
 
 import android.view.LayoutInflater
 import android.view.View

@@ -1,4 +1,4 @@
-package com.example.twitchvod
+package meta11ica.tn.twitchvod
 
 import android.content.Context
 import android.content.Intent
@@ -33,7 +33,6 @@ import com.bumptech.glide.request.transition.Transition
 import kotlinx.coroutines.runBlocking
 import org.json.JSONArray
 
-import java.util.Collections
 import kotlin.math.min
 
 /**

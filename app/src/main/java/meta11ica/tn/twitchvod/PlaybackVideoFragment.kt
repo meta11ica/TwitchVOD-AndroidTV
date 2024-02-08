@@ -1,26 +1,13 @@
-package com.example.twitchvod
+package meta11ica.tn.twitchvod
 
 import android.net.Uri
 import android.os.Bundle
 import android.os.StrictMode
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.leanback.app.ProgressBarManager
 import androidx.leanback.app.VideoSupportFragment
 import androidx.leanback.app.VideoSupportFragmentGlueHost
-import androidx.leanback.media.MediaPlayerAdapter
-import androidx.leanback.media.PlaybackControlGlue
-import androidx.leanback.media.PlaybackTransportControlGlue
-import androidx.leanback.widget.Action
-import androidx.leanback.widget.ArrayObjectAdapter
-import androidx.leanback.widget.ControlButtonPresenterSelector
-import androidx.leanback.widget.PlaybackControlsRow
-import androidx.leanback.widget.PlaybackControlsRow.SkipPreviousAction
-import androidx.leanback.widget.PlaybackControlsRowPresenter
-import androidx.leanback.widget.PlaybackSeekDataProvider
-import androidx.leanback.widget.PlaybackSeekUi
 import androidx.lifecycle.lifecycleScope
 import khttp.post
 import kotlinx.coroutines.launch
@@ -129,7 +116,7 @@ $url"""
             }
 
 
-            val playerAdapter = BasicMediaPlayerAdapter(requireActivity())
+            val playerAdapter = meta11ica.tn.twitchvod.BasicMediaPlayerAdapter(requireActivity())
 
             mTransportControlGlue = BasicTransportControlsGlue(requireContext(), playerAdapter)
             DetailsActivity.MOVIE

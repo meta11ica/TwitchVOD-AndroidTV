@@ -1,4 +1,4 @@
-package com.example.twitchvod
+package meta11ica.tn.twitchvod
 
 import android.graphics.drawable.Drawable
 import androidx.leanback.widget.ImageCardView

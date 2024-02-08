@@ -1,7 +1,6 @@
-package com.example.twitchvod
+package meta11ica.tn.twitchvod
 
 import android.content.Context
-import android.util.Log
 import android.view.KeyEvent
 import android.view.View
 import androidx.leanback.media.PlaybackTransportControlGlue
@@ -11,8 +10,8 @@ import androidx.leanback.widget.PlaybackControlsRow
 
 class BasicTransportControlsGlue(
     context: Context?,
-    playerAdapter: BasicMediaPlayerAdapter,
-) : PlaybackTransportControlGlue<BasicMediaPlayerAdapter>(context, playerAdapter) {
+    playerAdapter: meta11ica.tn.twitchvod.BasicMediaPlayerAdapter,
+) : PlaybackTransportControlGlue<meta11ica.tn.twitchvod.BasicMediaPlayerAdapter>(context, playerAdapter) {
     // Primary actions
     private val forwardAction = PlaybackControlsRow.FastForwardAction(context)
     private val rewindAction = PlaybackControlsRow.RewindAction(context)

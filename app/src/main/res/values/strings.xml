@@ -8,7 +8,9 @@
     <string name="watch_trailer_1">WATCH NOW</string>
     <string name="watch_trailer_2">FREE</string>
     <string name="movie">Movie</string>
-    <string name="search_hint">Domingo</string>
+    <string name="search_hint">streamerid eg: micode</string>
+    <string name="active_favourite_streamers">Active Favourite Streamers</string>
+
 
 
     <!-- Error messages -->
@@ -61,5 +63,4 @@
         libero vel nunc consequat, quis tincidunt nisl eleifend. Cras bibendum enim a justo luctus
         vestibulum. Fusce dictum libero quis erat maximus, vitae volutpat diam dignissim.
     </string>
-    <string name="active_favorite_streamers">Active Favorite Streamers</string>
 </resources>

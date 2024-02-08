@@ -1,11 +1,7 @@
-package com.example.twitchvod
+package meta11ica.tn.twitchvod
 import kotlinx.coroutines.*
-import android.content.SharedPreferences
 import android.os.Bundle
-import android.util.Log
-import android.view.KeyEvent
 import androidx.fragment.app.FragmentActivity
-import org.json.JSONObject
 
 
 /**

@@ -4,14 +4,14 @@ plugins {
 }
 
 android {
-    namespace = "com.example.twitchvod"
+    namespace = "meta11ica.tn.twitchvod"
     compileSdk = 34
     buildFeatures {
         viewBinding = true
     }
 
     defaultConfig {
-        applicationId = "com.example.twitchvod"
+        applicationId = "meta11ica.tn.twitchvod"
         minSdk = 21
         targetSdk = 34
         versionCode = 1

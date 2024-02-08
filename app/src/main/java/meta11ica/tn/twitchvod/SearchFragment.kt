@@ -1,27 +1,18 @@
-package com.example.twitchvod
+package meta11ica.tn.twitchvod
 
 import android.content.Intent
 import android.content.SharedPreferences
-import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.util.Log
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.addCallback
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.edit
-import androidx.fragment.app.Fragment
-import androidx.leanback.app.BackgroundManager
 import androidx.leanback.app.SearchSupportFragment
 import androidx.leanback.widget.ArrayObjectAdapter
 import androidx.leanback.widget.HeaderItem
 import androidx.leanback.widget.ListRow
 import androidx.leanback.widget.ListRowPresenter
 import androidx.leanback.widget.ObjectAdapter
-import androidx.leanback.widget.Presenter
-import androidx.leanback.widget.SearchOrbView
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 
@@ -63,14 +54,14 @@ lateinit var sharedPrefs: SharedPreferences
 
 
         // Create a HeaderItem for the list row
-        val header = HeaderItem(0,"Active Favorite Streamers")
+        val header = HeaderItem(0,getString(R.string.active_favourite_streamers))
 
         // Create a ListRow to hold the search results
         val listRowAdapter = ArrayObjectAdapter(TextPresenter())
         // Use your TextPresenter here
-        val sortedSTREAMER_ID = sTREAMER_ID?.sorted()
+        val sortedSTREAMER_ID = sTREAMER_ID.sorted()
 
-            if (sTREAMER_ID != null) {
+            if (sTREAMER_ID != null && sTREAMER_ID.size>0) {
                 for(streamer in sTREAMER_ID!!) {
                     listRowAdapter.add(streamer)
                 }
@@ -95,14 +86,22 @@ lateinit var sharedPrefs: SharedPreferences
         lifecycleScope.launch {
             if (query != null) {
                 Log.d("onQueryTextSubmit", query)
-                if (query.uppercase() in mapSTREAMER_ID) {
-                    sTREAMER_ID = sTREAMER_ID.filter { it != mapSTREAMER_ID[query.uppercase()] }
-
-                    Toast.makeText(
-                        requireActivity(),
-                        "$query removed successfully!!",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                if (query.uppercase() in mapSTREAMER_ID){
+                    if (mapSTREAMER_ID.size>1) {
+                        sTREAMER_ID = sTREAMER_ID.filter { it != mapSTREAMER_ID[query.uppercase()] }
+                        Toast.makeText(
+                            requireActivity(),
+                            "$query removed successfully!!",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                    else {
+                        Toast.makeText(
+                            requireActivity(),
+                            "$query not removed! List must contain at least 1",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
                 } else {
                     sTREAMER_ID = sTREAMER_ID.plus(query)!!
                     Toast.makeText(
@@ -113,7 +112,6 @@ lateinit var sharedPrefs: SharedPreferences
 
                 }
                 sharedPrefs.edit()?.remove("favourite_streamers")?.commit()
-
                 sharedPrefs.edit()
                     ?.putString("favourite_streamers", sTREAMER_ID.joinToString(separator = ","))
                     ?.commit();
