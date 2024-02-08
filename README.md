@@ -1,7 +1,8 @@
-# Project Title
+# TwitchVOD
 
-TwitchVOD : An Android TV Application to view Twitch VOD without sub.
+An Android TV Application to view Twitch VOD without sub.
 Inspired by the Leanback example from Google in Kotlin, and modified it for Twitch VOD no Sub.
+Please don't use it on Android phone and then complain, use Kiwi Browser and [this extension](https://github.com/meta11ica/mTwitchNoSub-also/releases) instead.
 
 
 ## Description
