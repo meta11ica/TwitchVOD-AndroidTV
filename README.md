@@ -18,7 +18,7 @@ For Android TV : you are in the good place. Download the [APK here](https://gith
 ## Getting Started
 
 ### Notes
-I implemented the add to favourites in an ugly way (minimalist) until I work on the Personal Settings Fragment.
+I implemented the add to favourites in an ugly/quick and dirty way until I really work on a Personal Settings Fragment.
 #### Add a streamer to your favourite list
 Click the Search button, then type your streamer id (username) and click Search.
 The streamer is added to your favorite list.
@@ -57,25 +57,15 @@ Install it, you may need to select "Install anyway" (the package is signed by my
 * Beautify streamer names and not rely on username only
 * Add auto-update in case new release (nice to have)
 * ...
-```
-code blocks for commands
-```
 
 ## Help
 
 Feel free to open an issue in case of a problem.
-```
-command to run if program contains helper info
-```
-
-## Authors
-
-Contributors names and contact info
 
 ## Version History
 
 * 1.0
-    * Initial Release
+    * Initial Release : Very quick and very dirty
 
 ## License
 
