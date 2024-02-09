@@ -1,4 +1,4 @@
-# TwitchVOD
+# TwitchVOD-AndroidTV
 
 An Android TV Application to view Twitch VOD without sub.
 Inspired by the Leanback example from Google in Kotlin, and modified it for Twitch VOD no Sub.
@@ -13,7 +13,7 @@ The method is inspired by the method of [besuper/TwitchNoSub](https://github.com
 Although it can be used on Android phones, it's buggy. So please don't use it on phones.
 For PC : An extension is available for Chrome, Firefox ([here](https://github.com/besuper/TwitchNoSub/releases))
 For Android phones : Please use Kiwi Browser and use [this extension](https://github.com/meta11ica/mTwitchNoSub-also/releases)
-For Android TV : you are in the good place. Download the [APK here](https://github.com/meta11ica/TwitchVOD/releases)
+For Android TV : you are in the good place. Download the [APK here](https://github.com/meta11ica/TwitchVOD-AndroidTV/releases)
 
 ## Getting Started
 
@@ -32,7 +32,7 @@ Hit back and the application will restart with the new list.
 
 ### Installing from releases
 You need a File Explorer in your Android TV (for example ES File Explorer). Install it from Play Store.
-Please go to [releases section](https://github.com/meta11ica/TwitchVOD/releases) and download the latest APK version and save it to a thumb drive (flash disk).
+Please go to [releases section](https://github.com/meta11ica/TwitchVOD-AndroidTV/releases) and download the latest APK version and save it to a thumb drive (flash disk).
 In Android TV, go to Setting > Security and Check the option "Unknown sources". (please revert it to Unchecked after installation)
 Insert the thumb drive and browse it with ES File Explorer.
 Install it, you may need to select "Install anyway" (the package is signed by my own keys which are unknown to Google)
@@ -67,9 +67,6 @@ Feel free to open an issue in case of a problem.
 * 1.0
     * Initial Release : Very quick and very dirty
 
-## License
-
-This project is licensed under the [MIT] License - see the LICENSE.md file for details
 
 ## Acknowledgments
 
