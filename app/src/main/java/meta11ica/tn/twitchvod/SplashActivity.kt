@@ -8,7 +8,6 @@ import android.view.LayoutInflater
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import meta11ica.tn.twitchvod.databinding.ActivitySplashBinding
-import khttp.get
 import khttp.post
 import kotlinx.coroutines.launch
 import org.json.JSONArray
