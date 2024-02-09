@@ -34,26 +34,25 @@ class SplashActivity : AppCompatActivity() {
         }
 
     }
-    data class Stream(val title: String,val description: String,val studio: String, val videoUrl: String, val bgImageUrl: String, val cardImageUrl: String)
 
-    fun initializePrefs() {
-        lateinit var sTREAMER_ID: List<String>
+    private fun initializePrefs() {
+        lateinit var streamerId: List<String>
         val sharedPrefs = getSharedPreferences("Streamers", MODE_PRIVATE)
 
         //sharedPrefs.edit().clear().commit()
         if (sharedPrefs.getString("favourite_streamers", null)==null) {
-            sTREAMER_ID = listOf(
+            streamerId = listOf(
                 "Domingo"
             )
 
-            sharedPrefs.edit().putString("favourite_streamers",sTREAMER_ID.joinToString(separator=",")).commit()
+            sharedPrefs.edit().putString("favourite_streamers",streamerId.joinToString(separator=",")).commit()
         }
         else {
-            sTREAMER_ID = sharedPrefs.getString("favourite_streamers", "micode")?.split(",")!!
+            streamerId = sharedPrefs.getString("favourite_streamers", "micode")?.split(",")!!
             // Return the array of values
 
         }
-        val editor = sharedPrefs.edit();
+        val editor = sharedPrefs.edit()
         // the first use of the shared preference will trigger its initialisation
         editor?.putBoolean("initialized", true)
         val fake = false
@@ -64,10 +63,6 @@ class SplashActivity : AppCompatActivity() {
 
         if(fake)
         {
-            var map = mutableMapOf<String, String>()
-            var streams = ArrayList<Stream>()
-            var stream = mutableMapOf<String, Any>()
-
             val title = arrayOf(
                 "Category Zero 2010_ Year in Review",
                 "Google Demo Slam_ 20ft Search",
@@ -108,8 +103,7 @@ class SplashActivity : AppCompatActivity() {
                 "https://commondatastorage.googleapis.com/android-tv/Sample%20videos/April%20Fool's%202013/Introducing%20Google%20Fiber%20to%20the%20Pole/card.jpg",
                 "https://commondatastorage.googleapis.com/android-tv/Sample%20videos/April%20Fool's%202013/Introducing%20Google%20Nose/card.jpg"
             )
-            var cnt = 0;
-            for (streamer in sTREAMER_ID) {
+            for (streamer in streamerId) {
 
                 // body of loop
                 val streamsArray = JSONArray()
@@ -130,7 +124,7 @@ class SplashActivity : AppCompatActivity() {
 
 
             }
-            editor?.putString("movies",streamerArray.toString());
+            editor?.putString("movies",streamerArray.toString())
             editor.commit()
 
         }
@@ -163,14 +157,10 @@ class SplashActivity : AppCompatActivity() {
 
     if (!userLiveJsonObject.toString().contains("\"stream\":null")) {
         val liveUrl = getLiveURL(favStreamers?.get(it))
-        if (liveUrl != null) {
-        }
         title.add(userLiveJsonObject.getJSONObject("data").getJSONObject("user").getJSONObject("broadcastSettings").getString("title"))
         description.add(userLiveJsonObject.getJSONObject("data").getJSONObject("user").getJSONObject("broadcastSettings").getString("title"))
         studio.add(("Twitch"))
-        if (liveUrl != null) {
-            videoUrl.add(liveUrl)
-        }
+        videoUrl.add(liveUrl)
         bgImageUrl.add(
             "data:image/png;base64,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"
         )
@@ -217,12 +207,12 @@ catch(e: Exception) {(Log.e("error","user problem"))}
                         streamsArray.put(streamObject)
                     }
                     val streamerObject = JSONObject()
-                    streamerObject.put("streamer_id", favStreamers?.get(it) ?: null)
+                    streamerObject.put("streamer_id", favStreamers?.get(it))
                     streamerObject.put("streams", streamsArray)
                     streamerArray.put(streamerObject)
 
                 }
-                editor?.putString("movies",streamerArray.toString());
+                editor?.putString("movies",streamerArray.toString())
                 editor.commit()
 
             }
@@ -232,14 +222,14 @@ catch(e: Exception) {(Log.e("error","user problem"))}
 
     }
 
-    suspend fun makeTwitchPostRequest(favStreamers: List<String>): Array<String> {
+    fun makeTwitchPostRequest(favStreamers: List<String>): Array<String> {
             val vodResponse = fetchGQL(buildVODStreamsObjectRequest(favStreamers))
             val liveResponse = fetchGQL(buildLiveStreamsObjectRequest(favStreamers))
             return arrayOf(vodResponse,liveResponse)
     }
 
 
-    suspend fun getLiveURL(streamer: String?): String? {
+    fun getLiveURL(streamer: String?): String {
         val query = """
         query PlaybackAccessToken_Template(${"$"}login: String!, ${"$"}isLive: Boolean!, ${"$"}vodID: ID!, ${"$"}isVod: Boolean!, ${"$"}playerType: String!) {  streamPlaybackAccessToken(channelName: ${"$"}login, params: {platform: "web", playerBackend: "mediaplayer", playerType: ${"$"}playerType}) @include(if: ${"$"}isLive) {    value    signature    __typename  } videoPlaybackAccessToken(id: ${"$"}vodID, params: {platform: "web", playerBackend: "mediaplayer", playerType: ${"$"}playerType}) @include(if: ${"$"}isVod) {    value    signature    __typename  }}
     """.trimIndent()
@@ -327,7 +317,7 @@ catch(e: Exception) {(Log.e("error","user problem"))}
         return queriesArray2
     }
 
-    suspend fun fetchGQL(body: JSONArray): String {
+    fun fetchGQL(body: JSONArray): String {
 
         val url = "https://gql.twitch.tv/gql"
 

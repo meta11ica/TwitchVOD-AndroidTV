@@ -19,8 +19,8 @@ import kotlinx.coroutines.launch
 
 class SearchFragment : SearchSupportFragment(), SearchSupportFragment.SearchResultProvider {
 lateinit var sharedPrefs: SharedPreferences
-    lateinit var sTREAMER_ID: List<String>
-    lateinit var mapSTREAMER_ID: Map<String,String>
+    lateinit var streamerId: List<String>
+    lateinit var mapStreamerId: Map<String,String>
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -39,7 +39,7 @@ lateinit var sharedPrefs: SharedPreferences
     }
     private fun navigateToMainFragment() {
         // Replace the current fragment with MainFragment
-        this.activity?.finish();
+        this.activity?.finish()
         val intent = Intent(this.activity, SplashActivity::class.java)
         startActivity(intent)
         //this.activity?.getIntent()?.let { startActivity(it) };
@@ -48,8 +48,8 @@ lateinit var sharedPrefs: SharedPreferences
     override fun getResultsAdapter(): ObjectAdapter {
 
         sharedPrefs = activity?.getSharedPreferences("Streamers",  0)!!
-        sTREAMER_ID = sharedPrefs.getString("favourite_streamers","[micode]").toString()?.split(",")!!
-        mapSTREAMER_ID = sTREAMER_ID.associate { it.uppercase() to it }
+        streamerId = sharedPrefs.getString("favourite_streamers","[micode]").toString().split(",")
+        mapStreamerId = streamerId.associate { it.uppercase() to it }
         val rowsAdapter = ArrayObjectAdapter(ListRowPresenter())
 
 
@@ -59,10 +59,10 @@ lateinit var sharedPrefs: SharedPreferences
         // Create a ListRow to hold the search results
         val listRowAdapter = ArrayObjectAdapter(TextPresenter())
         // Use your TextPresenter here
-        val sortedSTREAMER_ID = sTREAMER_ID.sorted()
+        val sortedStreamerId = streamerId.sorted()
 
-            if (sTREAMER_ID != null && sTREAMER_ID.size>0) {
-                for(streamer in sTREAMER_ID!!) {
+            if (sortedStreamerId.isNotEmpty()) {
+                for(streamer in sortedStreamerId) {
                     listRowAdapter.add(streamer)
                 }
             }
@@ -86,9 +86,9 @@ lateinit var sharedPrefs: SharedPreferences
         lifecycleScope.launch {
             if (query != null) {
                 Log.d("onQueryTextSubmit", query)
-                if (query.uppercase() in mapSTREAMER_ID){
-                    if (mapSTREAMER_ID.size>1) {
-                        sTREAMER_ID = sTREAMER_ID.filter { it != mapSTREAMER_ID[query.uppercase()] }
+                if (query.uppercase() in mapStreamerId){
+                    if (mapStreamerId.size>1) {
+                        streamerId = streamerId.filter { it != mapStreamerId[query.uppercase()] }
                         Toast.makeText(
                             requireActivity(),
                             "$query removed successfully!!",
@@ -103,7 +103,7 @@ lateinit var sharedPrefs: SharedPreferences
                         ).show()
                     }
                 } else {
-                    sTREAMER_ID = sTREAMER_ID.plus(query)!!
+                    streamerId = streamerId.plus(query)
                     Toast.makeText(
                         requireActivity(),
                         "$query added successfully!!",
@@ -113,7 +113,7 @@ lateinit var sharedPrefs: SharedPreferences
                 }
                 sharedPrefs.edit()?.remove("favourite_streamers")?.commit()
                 sharedPrefs.edit()
-                    ?.putString("favourite_streamers", sTREAMER_ID.joinToString(separator = ","))
+                    ?.putString("favourite_streamers", streamerId.joinToString(separator = ","))
                     ?.commit();
 
             }
