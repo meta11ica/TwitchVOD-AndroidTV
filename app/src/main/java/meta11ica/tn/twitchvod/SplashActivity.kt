@@ -13,6 +13,7 @@ import khttp.post
 import kotlinx.coroutines.launch
 import org.json.JSONArray
 import org.json.JSONObject
+import java.net.URLEncoder
 
 class SplashActivity : AppCompatActivity() {
     private lateinit var binding: ActivitySplashBinding
@@ -49,8 +50,7 @@ class SplashActivity : AppCompatActivity() {
             sharedPrefs.edit().putString("favourite_streamers",sTREAMER_ID.joinToString(separator=",")).commit()
         }
         else {
-            val sTREAMER_ID = sharedPrefs.getString("favourite_streamers", "micode")?.split(",")
-
+            sTREAMER_ID = sharedPrefs.getString("favourite_streamers", "micode")?.split(",")!!
             // Return the array of values
 
         }
@@ -166,8 +166,8 @@ class SplashActivity : AppCompatActivity() {
         val liveUrl = getLiveURL(favStreamers?.get(it))
         if (liveUrl != null) {
         }
-        title.add("LIVE")
-        description.add("LIVE")
+        title.add(userLiveJsonObject.getJSONObject("data").getJSONObject("user").getJSONObject("broadcastSettings").getString("title"))
+        description.add(userLiveJsonObject.getJSONObject("data").getJSONObject("user").getJSONObject("broadcastSettings").getString("title"))
         studio.add(("Twitch"))
         if (liveUrl != null) {
             videoUrl.add(liveUrl)
@@ -234,16 +234,41 @@ catch(e: Exception) {(Log.e("error","user problem"))}
     }
 
     suspend fun makeTwitchPostRequest(favStreamers: List<String>): Array<String> {
-        val url = "https://gql.twitch.tv/gql"
+            val vodResponse = fetchGQL(buildVODStreamsObjectRequest(favStreamers))
+            val liveResponse = fetchGQL(buildLiveStreamsObjectRequest(favStreamers))
+            return arrayOf(vodResponse,liveResponse)
+    }
 
-        val headers = mapOf(
-            "Client-ID" to "kimne78kx3ncx6brgo4mv6wki5h1ko",
-            "Content-Type" to "application/json",
-            "Accept" to "application/json"
-        )
-        var body ="["
+
+    suspend fun getLiveURL(streamer: String?): String? {
+        val query = """
+        query PlaybackAccessToken_Template(${"$"}login: String!, ${"$"}isLive: Boolean!, ${"$"}vodID: ID!, ${"$"}isVod: Boolean!, ${"$"}playerType: String!) {  streamPlaybackAccessToken(channelName: ${"$"}login, params: {platform: "web", playerBackend: "mediaplayer", playerType: ${"$"}playerType}) @include(if: ${"$"}isLive) {    value    signature    __typename  } videoPlaybackAccessToken(id: ${"$"}vodID, params: {platform: "web", playerBackend: "mediaplayer", playerType: ${"$"}playerType}) @include(if: ${"$"}isVod) {    value    signature    __typename  }}
+    """.trimIndent()
+        val variablesObject = JSONObject()
+        variablesObject.put("isLive", true)
+        variablesObject.put("isVod", false)
+        variablesObject.put("login", streamer)
+        variablesObject.put("playerType", "site")
+        variablesObject.put("vodID", "")
+
+        val queryObject = JSONObject()
+        val queryArray = JSONArray()
+        queryObject.put("operationName", "PlaybackAccessToken_Template")
+        queryObject.put("query",query)
+        queryObject.put("variables",variablesObject)
+        queryArray.put(queryObject)
+        val rawtoken = JSONArray(fetchGQL(queryArray)).getJSONObject(0)
+        val token = URLEncoder.encode(rawtoken.getJSONObject("data").getJSONObject("streamPlaybackAccessToken").getString("value"), "UTF-8")
+        val signature = rawtoken.getJSONObject("data").getJSONObject("streamPlaybackAccessToken").getString("signature")
+
+        val url = "api/channel/hls/$streamer"
+        val liveStreamUrl = "https://usher.ttvnw.net/$url.m3u8?allow_source=true&allow_audio_only=true&fast_bread=true&playlist_include_framerate=true&reassignments_supported=true&sig=$signature&token=$token"
+
+        return liveStreamUrl
+    }
+
+    fun buildVODStreamsObjectRequest(favStreamers: List<String>):JSONArray {
         val queriesArray = JSONArray()
-        val queriesArray2 = JSONArray()
 
         for (channelOwnerLogin in favStreamers) {
             val variablesObject = JSONObject()
@@ -255,7 +280,10 @@ catch(e: Exception) {(Log.e("error","user problem"))}
             val extensionsObject = JSONObject()
             val persistedQueryObject = JSONObject()
             persistedQueryObject.put("version", 1)
-            persistedQueryObject.put("sha256Hash", "072ae0f19038145cdf1bbe51c83be73fa15ab553483509a8bb65589f6b9ca279")
+            persistedQueryObject.put(
+                "sha256Hash",
+                "072ae0f19038145cdf1bbe51c83be73fa15ab553483509a8bb65589f6b9ca279"
+            )
             extensionsObject.put("persistedQuery", persistedQueryObject)
 
             val queryObject = JSONObject()
@@ -264,9 +292,14 @@ catch(e: Exception) {(Log.e("error","user problem"))}
             queryObject.put("extensions", extensionsObject)
 
             queriesArray.put(queryObject)
+        }
+        return queriesArray
+    }
 
-            // CHECK FOR LIVE
-            // Build variables object
+    fun buildLiveStreamsObjectRequest(favStreamers: List<String>):JSONArray {
+        val queriesArray2 = JSONArray()
+
+        for (channelOwnerLogin in favStreamers) {
             val variablesObject2 = JSONObject().apply {
                 put("isCollectionContent", false)
                 put("isLiveContent", true)
@@ -291,18 +324,11 @@ catch(e: Exception) {(Log.e("error","user problem"))}
                 put("extensions", extensionsObject2)
             }
             queriesArray2.put(jsonObject)
-
         }
-        var vodResponse = post(url=url,headers=headers,data=queriesArray.toString()).text
-        var liveResponse = post(url=url,headers=headers,data=queriesArray2.toString()).text
-
-
-        return arrayOf(vodResponse,liveResponse)
+        return queriesArray2
     }
 
-
-    suspend fun getLiveURL(streamer: String?): String? {
-
+    suspend fun fetchGQL(body: JSONArray): String {
 
         val url = "https://gql.twitch.tv/gql"
 
@@ -312,40 +338,8 @@ catch(e: Exception) {(Log.e("error","user problem"))}
             "Accept" to "application/json",
             "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"
         )
-
-        var body = "{\"operationName\":\"PlaybackAccessToken_Template\",\"query\":\"query PlaybackAccessToken_Template("+"$"+"login: String!, "+"$"+"isLive: Boolean!, "+"$"+"vodID: ID!, "+"$"+"isVod: Boolean!, "+"$"+"playerType: String!) {  streamPlaybackAccessToken(channelName: "+"$"+"login, params: {platform: \\\"web\\\", playerBackend: \\\"mediaplayer\\\", playerType: "+"$"+"playerType}) @include(if: "+"$"+"isLive) {    value    signature   authorization { isForbidden forbiddenReasonCode }   __typename  }  videoPlaybackAccessToken(id: "+"$"+"vodID, params: {platform: \\\"web\\\", playerBackend: \\\"mediaplayer\\\", playerType: "+"$"+"playerType}) @include(if: "+"$"+"isVod) {    value    signature   __typename  }}\",\"variables\":{\"isLive\":true,\"login\":\"$streamer\",\"isVod\":false,\"vodID\":\"\",\"playerType\":\"site\"}}".trimIndent()
-
-        val jsonDetails = JSONObject(post(url=url,headers=headers,data=body).text).getJSONObject("data").getJSONObject("streamPlaybackAccessToken").getString("value")
-        val signature = JSONObject(post(url=url,headers=headers,data=body).text).getJSONObject("data").getJSONObject("streamPlaybackAccessToken").getString("signature")
-        val liveStreamUrl = "https://usher.ttvnw.net/api/channel/hls/$streamer.m3u8?acmb=e30%3D&allow_source=true&browser_family=chrome&browser_version=121.0&cdm=wv&fast_bread=true&os_name=Windows&os_version=NT%2010.0&p=6669808&platform=web&player_backend=mediaplayer&player_version=1.24.0-rc.1.3&playlist_include_framerate=true&reassignments_supported=true&sig=$signature&supported_codecs=av1,h265,h264&token=$jsonDetails&transcode_mode=cbr_v1"
-
-        getFirstLinkFromM3U8(liveStreamUrl)
-        return liveStreamUrl
-    }
-    fun getFirstLinkFromM3U8(gqlUrl: String): String? {
-        try {
-            val headers = mapOf(
-                "Accept" to "application/x-mpegURL, application/vnd.apple.mpegurl, application/json, text/plain",
-                "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
-                "Access-Control-Allow-Origin" to "https://www.twitch.tv",
-                "Referer" to "",
-                "Dnt" to "1",
-                "Client-ID" to "kimne78kx3ncx6brgo4mv6wki5h1ko"
-            )
-
-            val body = "[{\"operationName\":\"StreamRefetchManager\",\"variables\":{\"channel\":\"joueur_du_grenier\"},\"extensions\":{\"persistedQuery\":{\"version\":1,\"sha256Hash\":\"ecdcb724b0559d49689e6a32795e6a43bba4b2071b5e762a4d1edf2bb42a6789\"}}}]"
-            var m3u8Content = get(url=gqlUrl,headers=headers).text
+        return(post(url=url,headers=headers,data=body.toString()).text)
 
 
-            val pattern = Regex("""https://[^ ]+\.m3u8""")
-            val matchResult = pattern.find(m3u8Content)
-            val link = matchResult?.value ?: gqlUrl
-
-            return link
-
-        } catch (e: Exception) {
-            e.printStackTrace()
-            return gqlUrl
-        }
     }
 }
