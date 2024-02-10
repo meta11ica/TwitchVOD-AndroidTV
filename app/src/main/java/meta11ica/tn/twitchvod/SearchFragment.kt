@@ -1,5 +1,6 @@
 package meta11ica.tn.twitchvod
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
@@ -45,6 +46,7 @@ lateinit var sharedPrefs: SharedPreferences
         //this.activity?.getIntent()?.let { startActivity(it) };
     }
 
+    @SuppressLint("SuspiciousIndentation")
     override fun getResultsAdapter(): ObjectAdapter {
 
         sharedPrefs = activity?.getSharedPreferences("Streamers",  0)!!

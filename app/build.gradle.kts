@@ -1,8 +1,14 @@
+import java.util.Calendar
+import java.io.File
+
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
 }
-
+val majorVersion = 1
+val minorVersion = 0
+val customVersionCode = calculateVersionCode()
 android {
     namespace = "meta11ica.tn.twitchvod"
     compileSdk = 34
@@ -11,21 +17,42 @@ android {
     }
 
     defaultConfig {
+        // Set the version code using a dynamic value
         applicationId = "meta11ica.tn.twitchvod"
         minSdk = 21
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = customVersionCode
+        resValue("integer", "app_version_code", versionCode.toString())
 
+        versionName = "$majorVersion.$minorVersion.$versionCode"
+        println("Version Code:"+versionCode.toString())
     }
 
     buildTypes {
+
         release {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("debug")
+
+            gradle.buildFinished {
+
+                val versionJson = """
+            {
+              "latestVersion": "$majorVersion.$minorVersion.$customVersionCode",
+              "latestVersionCode": $customVersionCode,
+              "url": "https://github.com/meta11ica/TwitchVOD-AndroidTV/releases",
+              "releaseNotes": [
+                "- Bug fixes"
+              ]
+            }
+        """.trimIndent()
+                val outputJsonFile = File(buildDir, "version.json")
+                outputJsonFile.writeText(versionJson)
+            }
         }
     }
     compileOptions {
@@ -35,7 +62,12 @@ android {
     kotlinOptions {
         jvmTarget = "1.8"
     }
+    // MY POSTBUILD TASK
+
+
 }
+
+
 
 dependencies {
     implementation("androidx.preference:preference:1.2.1")
@@ -53,4 +85,28 @@ dependencies {
     implementation("androidx.navigation:navigation-fragment-ktx:2.7.6")
     implementation("androidx.navigation:navigation-ui-ktx:2.7.6")
     implementation("com.squareup.okhttp3:okhttp:4.9.1")
+
+}
+
+
+
+// Function to calculate the version code
+fun calculateVersionCode(): Int {
+    // Get the current date in milliseconds
+    val currentDateMillis = System.currentTimeMillis()
+    // Subtract the base date (e.g., January 1, 2020) in milliseconds
+    val baseDateMillis = getDateInMillis(2020, 0, 1)
+    // Calculate the number of days since the base date
+    val hoursSinceBaseDate = ((currentDateMillis - baseDateMillis) / (1000 * 60 * 60)).toInt()
+
+    // Return the version code based on the number of days
+    return hoursSinceBaseDate
+}
+
+// Function to get the date in milliseconds
+fun getDateInMillis(year: Int, month: Int, day: Int): Long {
+    val calendar = Calendar.getInstance()
+    calendar.set(year, month, day, 0, 0, 0)
+    calendar.set(Calendar.MILLISECOND, 0)
+    return calendar.timeInMillis
 }

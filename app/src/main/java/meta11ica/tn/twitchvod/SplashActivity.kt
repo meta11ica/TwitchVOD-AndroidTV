@@ -1,5 +1,6 @@
 package meta11ica.tn.twitchvod
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
 import android.os.StrictMode
@@ -35,10 +36,11 @@ class SplashActivity : AppCompatActivity() {
 
     }
 
+
     private fun initializePrefs() {
         lateinit var streamerId: List<String>
         val sharedPrefs = getSharedPreferences("Streamers", MODE_PRIVATE)
-
+Log.d("Hello World","Hello World")
         //sharedPrefs.edit().clear().commit()
         if (sharedPrefs.getString("favourite_streamers", null)==null) {
             streamerId = listOf(
