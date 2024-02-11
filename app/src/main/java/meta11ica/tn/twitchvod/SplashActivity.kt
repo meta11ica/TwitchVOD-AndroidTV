@@ -1,19 +1,24 @@
 package meta11ica.tn.twitchvod
 
-import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
 import android.os.StrictMode
 import android.util.Log
 import android.view.LayoutInflater
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import meta11ica.tn.twitchvod.databinding.ActivitySplashBinding
+import khttp.get
 import khttp.post
 import kotlinx.coroutines.launch
+import meta11ica.tn.twitchvod.AutoUpdateApk
+import meta11ica.tn.twitchvod.MainActivity
+import meta11ica.tn.twitchvod.R
+import meta11ica.tn.twitchvod.databinding.ActivitySplashBinding
 import org.json.JSONArray
 import org.json.JSONObject
 import java.net.URLEncoder
+
 
 class SplashActivity : AppCompatActivity() {
     private lateinit var binding: ActivitySplashBinding
@@ -22,11 +27,17 @@ class SplashActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         lifecycleScope.launch {
+
+            val policy = StrictMode.ThreadPolicy.Builder().permitAll().build()
+
+            StrictMode.setThreadPolicy(policy)
+            checkForUpdates()
             initializePrefs()
         }
         binding = ActivitySplashBinding.inflate(LayoutInflater.from(this))
         setContentView(binding.root)
         binding.ivGood.alpha = 0f
+
         binding.ivGood.animate().alpha(1f).setDuration(1000).withEndAction {
             val i = Intent(this, MainActivity::class.java)
             startActivity(i)
@@ -40,7 +51,6 @@ class SplashActivity : AppCompatActivity() {
     private fun initializePrefs() {
         lateinit var streamerId: List<String>
         val sharedPrefs = getSharedPreferences("Streamers", MODE_PRIVATE)
-Log.d("Hello World","Hello World")
         //sharedPrefs.edit().clear().commit()
         if (sharedPrefs.getString("favourite_streamers", null)==null) {
             streamerId = listOf(
@@ -132,9 +142,6 @@ Log.d("Hello World","Hello World")
         }
         else {
 
-            val policy = StrictMode.ThreadPolicy.Builder().permitAll().build()
-
-            StrictMode.setThreadPolicy(policy)
             lifecycleScope.launch {
 
                 val favStreamers = sharedPrefs.getString("favourite_streamers","[micode]")?.split(",")
@@ -332,5 +339,22 @@ catch(e: Exception) {(Log.e("error","user problem"))}
         return(post(url=url,headers=headers,data=body.toString()).text)
 
 
+    }
+    suspend fun checkForUpdates(): Unit {
+        try {
+            val latestRelease = JSONObject(get(url = getString(R.string.update_check_json)).text).getJSONArray("elements").getJSONObject(0).getInt("versionCode")
+            Toast.makeText(
+                this,
+                "Current version : "+resources.getInteger(R.integer.app_version_code)+", latest release version : "+latestRelease,
+                Toast.LENGTH_SHORT
+            ).show()
+            val aua = AutoUpdateApk(applicationContext, "https://raw.githubusercontent.com/meta11ica/TwitchVOD-AndroidTV/master/app/release/output-metadata.json")
+            aua.setUpdateInterval(AutoUpdateApk.DAYS * 1);
+
+        }
+        catch (e: Exception)
+        {
+            Log.e("Update checks","Couldn't check updates...")
+        }
     }
 }

@@ -12,7 +12,9 @@ val customVersionCode = calculateVersionCode()
 android {
     namespace = "meta11ica.tn.twitchvod"
     compileSdk = 34
+    useLibrary("org.apache.http.legacy")
     buildFeatures {
+        buildConfig = true
         viewBinding = true
     }
 
@@ -38,22 +40,6 @@ android {
             )
             signingConfig = signingConfigs.getByName("debug")
 
-            gradle.buildFinished {
-
-                val versionJson = """
-            {
-              "latestVersion": "$majorVersion.$minorVersion.$customVersionCode",
-              "latestVersionCode": $customVersionCode,
-              "url": "https://github.com/meta11ica/TwitchVOD-AndroidTV/releases",
-              "releaseNotes": [
-                "- Bug fixes"
-              ]
-            }
-        """.trimIndent()
-                val outputJsonFile = File(buildDir, "version.json")
-                outputJsonFile.writeText(versionJson)
-            }
-        }
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
@@ -64,6 +50,21 @@ android {
     }
     // MY POSTBUILD TASK
 
+        gradle.buildFinished {
+            val versionJson = """
+            {
+              "latestVersion": "$majorVersion.$minorVersion.$customVersionCode",
+              "version": $customVersionCode,
+              "filename": "https://github.com/meta11ica/TwitchVOD-AndroidTV/releases",
+              "releaseNotes": [
+                "- Bug fixes"
+              ]
+            }
+        """.trimIndent()
+            val outputJsonFile = File(buildDir, "version.json")
+            outputJsonFile.writeText(versionJson)
+        }
+    }
 
 }
 
@@ -85,6 +86,7 @@ dependencies {
     implementation("androidx.navigation:navigation-fragment-ktx:2.7.6")
     implementation("androidx.navigation:navigation-ui-ktx:2.7.6")
     implementation("com.squareup.okhttp3:okhttp:4.9.1")
+
 
 }
 

@@ -1,5 +1,6 @@
 <resources>
     <string name="app_name">Twitch VOD</string>
+    <string name="package_name">meta11ica.tn.twitchvod</string>
     <string name="browse_title">Twitch VOD</string>
     <string name="related_movies">Related Videos</string>
     <string name="grid_view">Grid View</string>
@@ -25,6 +26,10 @@
     <string name="second_fragment_label">Second Fragment</string>
     <string name="next">Next</string>
     <string name="previous">Previous</string>
+    <string name="update_check_json">https://raw.githubusercontent.com/meta11ica/TwitchVOD-AndroidTV/master/app/release/output-metadata.json</string>
+    <string name="update_channel_name">Updates</string>
+    <string name="update_channel_description">Show update notifications</string>
+
 
 
     <string name="lorem_ipsum">
