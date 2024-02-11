@@ -269,7 +269,7 @@ class AutoUpdateApk : Observable {
                         "https://raw.githubusercontent.com/meta11ica/TwitchVOD-AndroidTV/master/app/release/app-release.apk"
                     result[2] = "app-release.apk"
                     val file = File(context!!.filesDir, result[1])
-                    if(file.exists()) {
+                    if(!file.exists()) {
                         val url = URL(link)
                         val connection = url.openConnection() as HttpURLConnection
                         connection.connect()
