@@ -1,8 +1,11 @@
 package meta11ica.tn.twitchvod
 
+import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.drawable.Drawable
+import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -15,6 +18,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.core.app.ActivityOptionsCompat
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.fragment.app.FragmentActivity
 import androidx.leanback.app.BackgroundManager
 import androidx.leanback.app.BrowseSupportFragment
@@ -32,6 +36,7 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.SimpleTarget
 import com.bumptech.glide.request.transition.Transition
 import org.json.JSONArray
+import java.io.File
 import java.util.Timer
 import java.util.TimerTask
 import kotlin.math.min
@@ -120,6 +125,7 @@ class MainFragment : BrowseSupportFragment() {
 
         val mGridPresenter = GridItemPresenter()
         val gridRowAdapter = ArrayObjectAdapter(mGridPresenter)
+        gridRowAdapter.add(resources.getString(R.string.update_channel_name))
         gridRowAdapter.add(resources.getString(R.string.grid_view))
         gridRowAdapter.add(getString(R.string.error_fragment))
         gridRowAdapter.add(resources.getString(R.string.personal_settings))
@@ -174,6 +180,34 @@ class MainFragment : BrowseSupportFragment() {
                     activity?.supportFragmentManager?.beginTransaction()
                         ?.replace(R.id.main_browse_fragment, SearchFragment())
                         ?.commit()
+                }
+
+                if (item.contains(getString(R.string.update_channel_name))) {
+                    val preferences = context?.getSharedPreferences(
+                        context?.packageName + "_AutoUpdateApk",
+                        Context.MODE_PRIVATE
+                    )
+                    val url = context?.filesDir
+                        ?.absolutePath + "/"+
+                    preferences?.getString("update_file","nothing")
+                    try {
+                        val file = File(url)
+                        val uri = FileProvider.getUriForFile(requireContext(), "${requireContext().packageName}.provider", file)
+
+                        val promptInstall = Intent(Intent.ACTION_VIEW)
+                            .setDataAndType(uri, "application/vnd.android.package-archive")
+                            .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            .addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
+                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+
+                        context?.startActivity(Intent.createChooser(promptInstall,"Chooser"))
+                    }
+                    catch (e: Exception) {
+                        // Handle the exception
+                        e.printStackTrace()
+                        // Show a toast message or log the error
+                        Toast.makeText(activity!!, "Error installing APK", Toast.LENGTH_SHORT).show()
+                    }
                 }
                 else {
                     Toast.makeText(activity!!, item, Toast.LENGTH_SHORT).show()

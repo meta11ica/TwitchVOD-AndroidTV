@@ -28,6 +28,7 @@ import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.net.ConnectivityManager
 import android.net.NetworkInfo
+import android.net.Uri
 import android.os.AsyncTask
 import android.os.Build
 import android.os.Handler
@@ -52,6 +53,9 @@ import java.util.Observable
 import java.util.zip.CRC32
 import java.util.zip.Checksum
 import khttp.get
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 
 class AutoUpdateApk : Observable {
@@ -97,19 +101,12 @@ class AutoUpdateApk : Observable {
      * considered annoying behaviour and result in service suspension
      */
     fun setUpdateInterval(interval: Long) {
-        // if( interval > 60 * MINUTES ) {
         updateInterval = interval
-        // } else {
-        // Log_e(TAG, "update interval is too short (less than 1 hour)");
-        // }
+
     }
 
-    // call this if you want to perform update on demand
-    // (checking for updates more often than once an hour is not recommended
-    // and polling server every few minutes might be a reason for suspension)
-    //
     fun checkUpdatesManually() {
-        checkUpdates(true) // force update check
+        checkUpdates(false) // force update check
     }
 
     fun clearSchedule() {
@@ -147,17 +144,16 @@ class AutoUpdateApk : Observable {
             // state, such
             // as enabling queuing of HTTP requests when currentNetworkInfo is
             // connected etc.
-            val not_mobile = if (currentNetworkInfo!!.typeName
-                    .equals("MOBILE", ignoreCase = true)
-            ) false else true
-            if (currentNetworkInfo.isConnected
-                && (mobile_updates || not_mobile)
-            ) {
-                checkUpdates(false)
-                updateHandler.postDelayed(periodicUpdate, updateInterval)
-            } else {
-                updateHandler.removeCallbacks(periodicUpdate) // no network
-                // anyway
+
+            if (currentNetworkInfo != null) {
+                if (currentNetworkInfo.isConnected
+                ) {
+                    checkUpdates(true)
+                    updateHandler.postDelayed(periodicUpdate, updateInterval)
+                } else {
+                    updateHandler.removeCallbacks(periodicUpdate) // no network
+                    // anyway
+                }
             }
         }
     }
@@ -165,11 +161,12 @@ class AutoUpdateApk : Observable {
     private fun setupVariables(ctx: Context) {
         context = ctx
         packageName = context!!.packageName
-        val preferences = context!!.getSharedPreferences(
+        preferences = context!!.getSharedPreferences(
             packageName + "_" + TAG,
             Context.MODE_PRIVATE
         )
-        preferences.edit().clear().commit()
+
+        //preferences.edit().clear().commit()
         device_id = crc32(
             Secure.getString(
                 context!!.contentResolver,
@@ -178,18 +175,20 @@ class AutoUpdateApk : Observable {
         )
         last_update = preferences.getLong("last_update", 0)
         NOTIFICATION_ID += crc32(packageName)
-        // schedule.add(new ScheduleEntry(0,24));
+
         val appinfo = context!!.applicationInfo
         if (appinfo.icon != 0) {
             appIcon = appinfo.icon
         } else {
             Log_w(TAG, "unable to find application icon")
         }
+
         if (appinfo.labelRes != 0) {
             appName = context!!.getString(appinfo.labelRes)
         } else {
             Log_w(TAG, "unable to find application label")
         }
+
         if (File(appinfo.sourceDir).lastModified() > preferences.getLong(
                 MD5_TIME, 0
             )
@@ -210,6 +209,7 @@ class AutoUpdateApk : Observable {
                 }
             }
         }
+
         raise_notification()
         if (haveInternetPermissions()) {
             context!!.registerReceiver(
@@ -218,6 +218,7 @@ class AutoUpdateApk : Observable {
                 )
             )
         }
+
     }
 
     private fun checkSchedule(): Boolean {
@@ -253,9 +254,10 @@ class AutoUpdateApk : Observable {
                 } else {
                     response = get(apiPath).text
                 }
-                Log_v(TAG, "got a reply from update server")
-                val lastversion = JSONObject(response).getJSONArray("elements").getJSONObject(0)
-                    .getInt("versionCode")
+                Log.v(TAG, "got a reply from update server")
+                /*val lastversion = JSONObject(response).getJSONArray("elements").getJSONObject(0)
+                    .getInt("versionCode")*/
+                val lastversion = 500000
                 if (lastversion > context!!.resources.getInteger(R.integer.app_version_code)) {
                     result[0] = "have update"
                     result[1] = ("$lastversion.apk").toString()
@@ -286,20 +288,20 @@ class AutoUpdateApk : Observable {
                     }
                     outputStream.close()
                     inputStream.close()
-                    Log_v(TAG, "File downloaded successfully.")
+                    Log.v(TAG, "File downloaded successfully.")
                     setChanged()
                     notifyObservers(AUTOUPDATE_GOT_UPDATE)
                     return result
                 } else {
                     setChanged()
                     notifyObservers(AUTOUPDATE_NO_UPDATE)
-                    Log_v(TAG, "no update available")
+                    Log.v(TAG, "no update available")
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
             } finally {
                 val elapsed = System.currentTimeMillis() - start
-                Log_v(TAG, "update check finished in " + elapsed + "ms")
+                Log.v(TAG, "update check finished in " + elapsed + "ms")
             }
             return (arrayOf(0.toString()))
         }
@@ -307,30 +309,30 @@ class AutoUpdateApk : Observable {
 
         override fun onPreExecute() {
             // show progress bar or something
-            Log_v(TAG, "checking if there's update on the server")
+            Log.v(TAG, "checking if there's update on the server")
         }
 
         override fun onPostExecute(result: Array<String?>?) {
             // kill progress bar here
+
             if (result != null) {
+                val editor = preferences?.edit()
                 if (result[0].equals("have update", ignoreCase = true)) {
-                    preferences!!.edit().putString(
+                    editor?.putString(
                         UPDATE_FILE,
                         result[1]
                     )
-                        .commit()
                     val update_file_path = context!!.filesDir
                         .absolutePath + "/" + result[1]
-                    preferences!!.edit()
-                        .putString(MD5_KEY, MD5Hex(update_file_path))
-                        .commit()
-                    preferences!!.edit()
-                        .putLong(MD5_TIME, System.currentTimeMillis())
-                        .commit()
+                    editor
+                        ?.putString(MD5_KEY, MD5Hex(update_file_path))
+                    editor
+                        ?.putLong(MD5_TIME, System.currentTimeMillis())
                 }
+editor?.commit()
                 raise_notification()
             } else {
-                Log_v(TAG, "no reply from update server")
+                Log.v(TAG, "no reply from update server")
             }
         }
     }
@@ -340,7 +342,7 @@ class AutoUpdateApk : Observable {
         if (forced || (last_update + updateInterval) < now && checkSchedule()) {
             CheckUpdateTask().execute()
             last_update = System.currentTimeMillis()
-            preferences!!.edit().putLong(LAST_UPDATE_KEY, last_update).commit()
+            preferences?.edit()?.putLong(LAST_UPDATE_KEY, last_update)?.commit()
             setChanged()
             this.notifyObservers(AUTOUPDATE_CHECKING)
         }
@@ -351,46 +353,11 @@ class AutoUpdateApk : Observable {
         val nm = context
             ?.getSystemService(ns) as NotificationManager
         nm.cancelAll()
-        val update_file = preferences!!.getString(UPDATE_FILE, "")
+        val update_file = preferences?.getString(UPDATE_FILE, "")
         if (update_file!!.length > 0) {
             setChanged()
             notifyObservers(AUTOUPDATE_HAVE_UPDATE)
             val file = File(context!!.filesDir, update_file)
-            /*
-			PackageInstaller packageInstaller = context.getPackageManager().getPackageInstaller();
-
-			PackageInstaller.SessionParams params = new PackageInstaller.SessionParams(
-					PackageInstaller.SessionParams.MODE_FULL_INSTALL);
-			try {
-				int sessionId = packageInstaller.createSession(params);
-				PackageInstaller.Session session = packageInstaller.openSession(sessionId);
-
-				OutputStream outputStream = session.openWrite("package", 0, file.length());
-				FileInputStream inputStream = new FileInputStream(file);
-				byte[] buffer = new byte[4096];
-				int n;
-				while ((n = inputStream.read(buffer)) >= 0) {
-					outputStream.write(buffer, 0, n);
-				}
-				session.fsync(outputStream);
-
-				Intent intent = new Intent(Intent.ACTION_PACKAGE_ADDED);
-				intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-
-				intent.setData(Uri.parse("package:" + context.getPackageName()));
-
-				PendingIntent pendingIntent = PendingIntent.getActivity(
-						context, 0, intent, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
-				inputStream.close();
-				outputStream.close();
-
-				session.commit(pendingIntent.getIntentSender());
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-
-			 */
-
             val contentTitle: CharSequence = appName + " update available"
             val contentText: CharSequence = "Select to install"
             val contentUri = FileProvider.getUriForFile(
@@ -399,7 +366,6 @@ class AutoUpdateApk : Observable {
             )
             val notificationIntent = Intent(Intent.ACTION_INSTALL_PACKAGE)
             notificationIntent.setDataAndType(contentUri, ANDROID_PACKAGE)
-            //notificationIntent.putExtra(Intent.EXTRA_STREAM, contentUri);
             notificationIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             notificationIntent.putExtra(Intent.EXTRA_RETURN_RESULT, true)
             notificationIntent.putExtra(Intent.EXTRA_NOT_UNKNOWN_SOURCE, true)
@@ -468,10 +434,10 @@ class AutoUpdateApk : Observable {
                         .substring(1, 3)
                 )
             }
-            Log_v(TAG, "md5sum: $sb")
+            Log.v(TAG, "md5sum: $sb")
             return sb.toString()
         } catch (e: Exception) {
-            Log_e(TAG, e.message)
+            e.message?.let { Log.e(TAG, it) }
         }
         return "md5bad"
     }
@@ -479,7 +445,6 @@ class AutoUpdateApk : Observable {
     private fun haveInternetPermissions(): Boolean {
         val required_perms: MutableSet<String> = HashSet()
         required_perms.add("android.permission.INTERNET")
-        required_perms.add("android.permission.ACCESS_WIFI_STATE")
         required_perms.add("android.permission.ACCESS_NETWORK_STATE")
         val pm = context!!.packageManager
         val packageName = context!!.packageName
@@ -489,7 +454,7 @@ class AutoUpdateApk : Observable {
             packageInfo = pm.getPackageInfo(packageName, flags)
             versionCode = packageInfo.versionCode
         } catch (e: PackageManager.NameNotFoundException) {
-            Log_e(TAG, e.message)
+            e.message?.let { Log.e(TAG, it) }
         }
         if (packageInfo!!.requestedPermissions != null) {
             for (p: String in packageInfo.requestedPermissions) {
@@ -501,13 +466,13 @@ class AutoUpdateApk : Observable {
             }
             // something is missing
             for (p: String in required_perms) {
-                Log_e(
+                Log.e(
                     TAG,
                     "required permission missing: $p"
                 )
             }
         }
-        Log_e(
+        Log.e(
             TAG,
             "INTERNET/WIFI access required, but no permissions are found in Manifest.xml"
         )
@@ -603,7 +568,7 @@ class AutoUpdateApk : Observable {
         protected val TAG = "AutoUpdateApk"
         private val ANDROID_PACKAGE = "application/vnd.android.package-archive"
         protected var context: Context? = null
-        protected var preferences: SharedPreferences? = null
+        lateinit var preferences: SharedPreferences
         private val LAST_UPDATE_KEY = "last_update"
         private var last_update: Long = 0
         private var appIcon = android.R.drawable.ic_popup_reminder

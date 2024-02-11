@@ -1,6 +1,7 @@
 package meta11ica.tn.twitchvod
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.os.StrictMode
 import android.util.Log
@@ -11,12 +12,10 @@ import androidx.lifecycle.lifecycleScope
 import khttp.get
 import khttp.post
 import kotlinx.coroutines.launch
-import meta11ica.tn.twitchvod.AutoUpdateApk
-import meta11ica.tn.twitchvod.MainActivity
-import meta11ica.tn.twitchvod.R
 import meta11ica.tn.twitchvod.databinding.ActivitySplashBinding
 import org.json.JSONArray
 import org.json.JSONObject
+import java.io.File
 import java.net.URLEncoder
 
 
@@ -340,7 +339,7 @@ catch(e: Exception) {(Log.e("error","user problem"))}
 
 
     }
-    suspend fun checkForUpdates(): Unit {
+    fun checkForUpdates() {
         try {
             val latestRelease = JSONObject(get(url = getString(R.string.update_check_json)).text).getJSONArray("elements").getJSONObject(0).getInt("versionCode")
             Toast.makeText(
@@ -348,12 +347,14 @@ catch(e: Exception) {(Log.e("error","user problem"))}
                 "Current version : "+resources.getInteger(R.integer.app_version_code)+", latest release version : "+latestRelease,
                 Toast.LENGTH_SHORT
             ).show()
-            val aua = AutoUpdateApk(applicationContext, "https://raw.githubusercontent.com/meta11ica/TwitchVOD-AndroidTV/master/app/release/output-metadata.json")
+
+            val aua = AutoUpdateApk(applicationContext, getString(R.string.update_check_json))
             aua.setUpdateInterval(AutoUpdateApk.DAYS * 1);
 
         }
         catch (e: Exception)
         {
+            e.printStackTrace()
             Log.e("Update checks","Couldn't check updates...")
         }
     }
