@@ -166,7 +166,6 @@ class AutoUpdateApk : Observable {
             Context.MODE_PRIVATE
         )
 
-        //preferences.edit().clear().commit()
         device_id = crc32(
             Secure.getString(
                 context!!.contentResolver,
@@ -255,9 +254,8 @@ class AutoUpdateApk : Observable {
                     response = get(apiPath).text
                 }
                 Log.v(TAG, "got a reply from update server")
-                /*val lastversion = JSONObject(response).getJSONArray("elements").getJSONObject(0)
-                    .getInt("versionCode")*/
-                val lastversion = 500000
+                val lastversion = JSONObject(response).getJSONArray("elements").getJSONObject(0)
+                    .getInt("versionCode")
                 if (lastversion > context!!.resources.getInteger(R.integer.app_version_code)) {
                     result[0] = "have update"
                     result[1] = ("$lastversion.apk").toString()
@@ -270,27 +268,30 @@ class AutoUpdateApk : Observable {
                     val link =
                         "https://raw.githubusercontent.com/meta11ica/TwitchVOD-AndroidTV/master/app/release/app-release.apk"
                     result[2] = "app-release.apk"
-                    val url = URL(link)
-                    val connection = url.openConnection() as HttpURLConnection
-                    connection.connect()
-                    if (connection.responseCode != HttpURLConnection.HTTP_OK) {
-                        Log.e(
-                            TAG,
-                            "Server returned HTTP " + connection.responseCode + " " + connection.responseMessage
-                        )
+                    val file = File(context!!.filesDir, result[1])
+                    if(file.exists()) {
+                        val url = URL(link)
+                        val connection = url.openConnection() as HttpURLConnection
+                        connection.connect()
+                        if (connection.responseCode != HttpURLConnection.HTTP_OK) {
+                            Log.e(
+                                TAG,
+                                "Server returned HTTP " + connection.responseCode + " " + connection.responseMessage
+                            )
+                        }
+                        val inputStream = connection.inputStream
+                        val outputStream = FileOutputStream(outputFile)
+                        val buffer = ByteArray(4096)
+                        var bytesRead: Int
+                        while ((inputStream.read(buffer).also { bytesRead = it }) != -1) {
+                            outputStream.write(buffer, 0, bytesRead)
+                        }
+                        outputStream.close()
+                        inputStream.close()
+                        Log.v(TAG, "File downloaded successfully.")
+                        setChanged()
+                        notifyObservers(AUTOUPDATE_GOT_UPDATE)
                     }
-                    val inputStream = connection.inputStream
-                    val outputStream = FileOutputStream(outputFile)
-                    val buffer = ByteArray(4096)
-                    var bytesRead: Int
-                    while ((inputStream.read(buffer).also { bytesRead = it }) != -1) {
-                        outputStream.write(buffer, 0, bytesRead)
-                    }
-                    outputStream.close()
-                    inputStream.close()
-                    Log.v(TAG, "File downloaded successfully.")
-                    setChanged()
-                    notifyObservers(AUTOUPDATE_GOT_UPDATE)
                     return result
                 } else {
                     setChanged()
@@ -303,7 +304,11 @@ class AutoUpdateApk : Observable {
                 val elapsed = System.currentTimeMillis() - start
                 Log.v(TAG, "update check finished in " + elapsed + "ms")
             }
-            return (arrayOf(0.toString()))
+
+            result[0] = "no update"
+            result[1] = "no file"
+            result[2] = "no file"
+            return result
         }
 
 

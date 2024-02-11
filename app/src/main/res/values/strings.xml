@@ -29,6 +29,8 @@
     <string name="update_check_json">https://raw.githubusercontent.com/meta11ica/TwitchVOD-AndroidTV/master/app/release/output-metadata.json</string>
     <string name="update_channel_name">Updates</string>
     <string name="update_channel_description">Show update notifications</string>
+    <string name="latest_version_already">Latest version already installed</string>
+    <string name="error_installing_apk">Error installing APK</string>
 
 
 

@@ -187,26 +187,39 @@ class MainFragment : BrowseSupportFragment() {
                         context?.packageName + "_AutoUpdateApk",
                         Context.MODE_PRIVATE
                     )
-                    val url = context?.filesDir
-                        ?.absolutePath + "/"+
-                    preferences?.getString("update_file","nothing")
-                    try {
-                        val file = File(url)
-                        val uri = FileProvider.getUriForFile(requireContext(), "${requireContext().packageName}.provider", file)
+                    val filename = preferences?.getString("update_file","nothing")
+                    if(filename!="nothing") {
+                        val url = context?.filesDir
+                            ?.absolutePath + "/" + filename
 
-                        val promptInstall = Intent(Intent.ACTION_VIEW)
-                            .setDataAndType(uri, "application/vnd.android.package-archive")
-                            .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                            .addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
-                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 
-                        context?.startActivity(Intent.createChooser(promptInstall,"Chooser"))
+                        try {
+                            val file = File(url)
+                            val uri = FileProvider.getUriForFile(
+                                requireContext(),
+                                "${requireContext().packageName}.provider",
+                                file
+                            )
+
+                            val promptInstall = Intent(Intent.ACTION_VIEW)
+                                .setDataAndType(uri, "application/vnd.android.package-archive")
+                                .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                .addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
+                                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+
+                            context?.startActivity(Intent.createChooser(promptInstall, "Chooser"))
+                        } catch (e: Exception) {
+                            // Handle the exception
+                            e.printStackTrace()
+                            // Show a toast message or log the error
+                            Toast.makeText(activity!!, R.string.error_installing_apk, Toast.LENGTH_SHORT)
+                                .show()
+                        }
                     }
-                    catch (e: Exception) {
-                        // Handle the exception
-                        e.printStackTrace()
-                        // Show a toast message or log the error
-                        Toast.makeText(activity!!, "Error installing APK", Toast.LENGTH_SHORT).show()
+                    else  {
+                        Toast.makeText(activity!!, R.string.latest_version_already, Toast.LENGTH_SHORT)                                .show()
+
+
                     }
                 }
                 else {
