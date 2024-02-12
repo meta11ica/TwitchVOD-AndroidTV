@@ -52,11 +52,8 @@ Install it, you may need to select "Install anyway" (the package is signed by my
 
 ### TODO
 
-* Implement the add/remove from Favorite Streamers list in Personal Settings
-* Fix bugs of Lives, but as I said better use the Twitch app for Live Streams
 * Beautify streamer names and not rely on username only
-* Add auto-update in case new release (nice to have)
-* ...
+* Implement search
 
 ## Help
 
@@ -64,7 +61,9 @@ Feel free to open an issue in case of a problem.
 
 ## Version History
 
-* 1.0
+* 1.0.36094
+    * Fixed live, Edit Favourite Streamers list, bug fixes 
+* 1.0.1
     * Initial Release : Very quick and very dirty
 
 
