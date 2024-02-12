@@ -17,6 +17,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
 import java.net.URLEncoder
+import java.util.Locale
 
 
 class SplashActivity : AppCompatActivity() {
@@ -258,9 +259,8 @@ catch(e: Exception) {(Log.e("error","user problem"))}
         val token = URLEncoder.encode(rawtoken.getJSONObject("data").getJSONObject("streamPlaybackAccessToken").getString("value"), "UTF-8")
         val signature = rawtoken.getJSONObject("data").getJSONObject("streamPlaybackAccessToken").getString("signature")
 
-        val url = "api/channel/hls/$streamer"
+        val url = "api/channel/hls/$streamer".lowercase(Locale.ROOT) //fix bug streamer name must be in lowercase
         val liveStreamUrl = "https://usher.ttvnw.net/$url.m3u8?allow_source=true&allow_audio_only=true&fast_bread=true&playlist_include_framerate=true&reassignments_supported=true&sig=$signature&token=$token"
-
         return liveStreamUrl
     }
 
