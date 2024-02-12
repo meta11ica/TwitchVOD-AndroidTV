@@ -6,4 +6,9 @@
 
     <style name="Theme.TwitchVOD" parent="@style/Theme.Leanback" />
     <!-- Base application theme. -->
+    <style name="RecyclerViewTheme" parent="Theme.MaterialComponents">
+        <!-- Customize your theme here. -->
+        <item name="cardBackgroundColor">@color/selected_background</item>
+        <!-- Other customizations -->
+    </style>
 </resources>

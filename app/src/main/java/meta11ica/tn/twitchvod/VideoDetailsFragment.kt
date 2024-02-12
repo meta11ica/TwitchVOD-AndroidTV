@@ -117,7 +117,6 @@ class VideoDetailsFragment : DetailsSupportFragment() {
             Action(
                 ACTION_WATCH_TRAILER,
                 resources.getString(R.string.watch_trailer_1),
-                resources.getString(R.string.watch_trailer_2)
             )
         )
         row?.actionsAdapter = actionAdapter

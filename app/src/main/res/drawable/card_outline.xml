@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Card is pressed or focused -->
+    <item android:drawable="@drawable/card_outline_selected" android:state_pressed="true"/>
+    <item android:drawable="@drawable/card_outline_selected" android:state_focused="true"/>
+    <!-- Default state -->
+    <item android:drawable="@drawable/card_outline_default"/>
+</selector>

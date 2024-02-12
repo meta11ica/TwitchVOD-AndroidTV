@@ -43,7 +43,6 @@ lateinit var sharedPrefs: SharedPreferences
         this.activity?.finish()
         val intent = Intent(this.activity, SplashActivity::class.java)
         startActivity(intent)
-        //this.activity?.getIntent()?.let { startActivity(it) };
     }
 
     @SuppressLint("SuspiciousIndentation")

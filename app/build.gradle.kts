@@ -20,7 +20,7 @@ android {
 
     defaultConfig {
         // Set the version code using a dynamic value
-        applicationId = "meta11ica.tn.twitchvod"
+        applicationId = namespace
         minSdk = 21
         targetSdk = 34
         versionCode = customVersionCode
@@ -72,6 +72,9 @@ android {
 
 dependencies {
     implementation("androidx.preference:preference:1.2.1")
+    implementation("com.google.android.flexbox:flexbox:3.0.0")
+    implementation("com.google.android.material:material:1.11.0")
+
     val leanback_version = "1.2.0-alpha04"
     implementation("io.karn:khttp-android:-SNAPSHOT")
     implementation("androidx.core:core-ktx:1.12.0")

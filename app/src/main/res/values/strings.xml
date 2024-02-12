@@ -5,13 +5,12 @@
     <string name="related_movies">Related Videos</string>
     <string name="grid_view">Grid View</string>
     <string name="error_fragment">Error Fragment</string>
-    <string name="personal_settings">Personal Settings</string>
+    <string name="edit_favourite_list">Edit Favourite List</string>
     <string name="watch_trailer_1">WATCH NOW</string>
-    <string name="watch_trailer_2">FREE</string>
     <string name="movie">Movie</string>
     <string name="search_hint">streamerid eg: micode</string>
     <string name="active_favourite_streamers">Active Favourite Streamers</string>
-
+    <string name="guideline_edit_favourite_list">Tap any streamer in the list to remove\nSearch any streamer to add to the list</string>
 
 
     <!-- Error messages -->
@@ -24,10 +23,12 @@
     <!-- Strings used for fragments for navigation -->
     <string name="first_fragment_label">First Fragment</string>
     <string name="second_fragment_label">Second Fragment</string>
+    <string name="settings_textview">Streamer</string>
+
     <string name="next">Next</string>
     <string name="previous">Previous</string>
     <string name="update_check_json">https://raw.githubusercontent.com/meta11ica/TwitchVOD-AndroidTV/master/app/release/output-metadata.json</string>
-    <string name="update_channel_name">Updates</string>
+    <string name="update_channel_name">Update App</string>
     <string name="update_channel_description">Show update notifications</string>
     <string name="latest_version_already">Latest version already installed</string>
     <string name="error_installing_apk">Error installing APK</string>

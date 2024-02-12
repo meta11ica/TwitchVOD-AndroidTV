@@ -2,10 +2,8 @@ package meta11ica.tn.twitchvod
 
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.drawable.Drawable
-import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -35,6 +33,7 @@ import androidx.leanback.widget.RowPresenter
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.SimpleTarget
 import com.bumptech.glide.request.transition.Transition
+import com.example.twitchvod.EditFavouriteListFragment
 import org.json.JSONArray
 import java.io.File
 import java.util.Timer
@@ -126,9 +125,9 @@ class MainFragment : BrowseSupportFragment() {
         val mGridPresenter = GridItemPresenter()
         val gridRowAdapter = ArrayObjectAdapter(mGridPresenter)
         gridRowAdapter.add(resources.getString(R.string.update_channel_name))
-        gridRowAdapter.add(resources.getString(R.string.grid_view))
-        gridRowAdapter.add(getString(R.string.error_fragment))
-        gridRowAdapter.add(resources.getString(R.string.personal_settings))
+        //gridRowAdapter.add(resources.getString(R.string.grid_view))
+        //gridRowAdapter.add(getString(R.string.error_fragment))
+        gridRowAdapter.add(resources.getString(R.string.edit_favourite_list))
         rowsAdapter.add(ListRow(gridHeader, gridRowAdapter))
 
         adapter = rowsAdapter
@@ -145,7 +144,6 @@ class MainFragment : BrowseSupportFragment() {
         }
 
         onItemViewClickedListener = ItemViewClickedListener()
-        onItemViewSelectedListener = ItemViewSelectedListener()
     }
 
     private inner class ItemViewClickedListener : OnItemViewClickedListener {
@@ -171,14 +169,14 @@ class MainFragment : BrowseSupportFragment() {
                 }
                 startActivity(intent, bundle)
             }  else if (item is String) {
-                if (item.contains(getString(R.string.error_fragment))) {
+                /*if (item.contains(getString(R.string.error_fragment))) {
                     val intent = Intent(activity!!, BrowseErrorActivity::class.java)
                     startActivity(intent)
-                }
-                else if (item.contains(getString(R.string.personal_settings))) {
+                }*/
+                if (item.contains(getString(R.string.edit_favourite_list))) {
                     resetBackground(activity)
                     activity?.supportFragmentManager?.beginTransaction()
-                        ?.replace(R.id.main_browse_fragment, SearchFragment())
+                        ?.replace(R.id.main_browse_fragment, EditFavouriteListFragment())
                         ?.commit()
                 }
 
@@ -222,59 +220,18 @@ class MainFragment : BrowseSupportFragment() {
 
                     }
                 }
-                else {
+                /*else {
                     Toast.makeText(activity!!, item, Toast.LENGTH_SHORT).show()
 
 
-                }
+                }*/
 
             }
         }
     }
 
-    private inner class ItemViewSelectedListener : OnItemViewSelectedListener {
-        override fun onItemSelected(
-            itemViewHolder: Presenter.ViewHolder?, item: Any?,
-            rowViewHolder: RowPresenter.ViewHolder, row: Row
-        ) {
-            if (item is Movie) {
-                mBackgroundUri = item.backgroundImageUrl
-                startBackgroundTimer()
-            }
-        }
-    }
 
-    private fun updateBackground(uri: String?) {
-        val width = mMetrics.widthPixels
-        val height = mMetrics.heightPixels
-        Glide.with(requireActivity())
-            .load(uri)
-            .centerCrop()
-            .error(mDefaultBackground)
-            .into<SimpleTarget<Drawable>>(
-                object : SimpleTarget<Drawable>(width, height) {
-                    override fun onResourceReady(
-                        drawable: Drawable,
-                        transition: Transition<in Drawable>?
-                    ) {
-                        mBackgroundManager.drawable = drawable
-                    }
-                })
-        mBackgroundTimer?.cancel()
-    }
 
-    private fun startBackgroundTimer() {
-        mBackgroundTimer?.cancel()
-        mBackgroundTimer = Timer()
-        mBackgroundTimer?.schedule(UpdateBackgroundTask(), BACKGROUND_UPDATE_DELAY.toLong())
-    }
-
-    private inner class UpdateBackgroundTask : TimerTask() {
-
-        override fun run() {
-            mHandler.post { updateBackground(mBackgroundUri) }
-        }
-    }
 
     private inner class GridItemPresenter : Presenter() {
         override fun onCreateViewHolder(parent: ViewGroup): Presenter.ViewHolder {
