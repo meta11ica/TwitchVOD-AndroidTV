@@ -1,11 +1,16 @@
 package meta11ica.tn.twitchvod
 
+import android.annotation.SuppressLint
 import android.net.Uri
 import android.os.Bundle
 import android.os.StrictMode
+import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.AccelerateDecelerateInterpolator
+import android.widget.TextView
+import androidx.core.view.isVisible
 import androidx.leanback.app.VideoSupportFragment
 import androidx.leanback.app.VideoSupportFragmentGlueHost
 import androidx.lifecycle.lifecycleScope
@@ -21,7 +26,10 @@ import java.util.Date
 class PlaybackVideoFragment : VideoSupportFragment() {
 
     private lateinit var mTransportControlGlue: BasicTransportControlsGlue
+    private lateinit var indicatorView: View
+    var isVod : Boolean = false
 
+    @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -37,7 +45,7 @@ class PlaybackVideoFragment : VideoSupportFragment() {
             val regex = Regex("""/videos/(\d+)""")
             val matchResult = videoUrl?.let { regex.find(it) }
             val vodId = matchResult?.groupValues?.get(1)
-
+                    isVod = true
             val data = vodId?.let { fetchTwitchDataGQL(it) }
             val vodData = data?.getJSONObject("data")?.getJSONObject("video")
             val channelData = vodData?.getJSONObject("owner")
@@ -115,12 +123,9 @@ $url"""
                 }
             }
 
-
-            val playerAdapter = meta11ica.tn.twitchvod.BasicMediaPlayerAdapter(requireActivity())
+            val playerAdapter = BasicMediaPlayerAdapter(requireActivity())
 
             mTransportControlGlue = BasicTransportControlsGlue(requireContext(), playerAdapter)
-            DetailsActivity.MOVIE
-            //mTransportControlGlue.host = glueHost
             mTransportControlGlue.host = VideoSupportFragmentGlueHost(this@PlaybackVideoFragment)
             val movie = activity?.intent?.getSerializableExtra(DetailsActivity.MOVIE) as Movie
             movie.videoUrl = finalVideoUrl
@@ -133,8 +138,64 @@ $url"""
             playerAdapter.setDataSource(Uri.parse(finalVideoUrl))
             mTransportControlGlue.playWhenPrepared()
 
+            setOnKeyInterceptListener { view, keyCode, event ->
+                if (isControlsOverlayVisible || event.repeatCount > 0) {
+                    isShowOrHideControlsOverlayOnUserInteraction = true
+                } else when (keyCode) {
+
+                    KeyEvent.KEYCODE_DPAD_RIGHT -> {
+                        isShowOrHideControlsOverlayOnUserInteraction = event.action != KeyEvent.ACTION_DOWN
+                        if (event.action == KeyEvent.ACTION_DOWN) {
+                            if(isVod) {
+                                val indicatorTextView =
+                                    view.findViewById<TextView>(R.id.indicatorTextView)
+                                indicatorTextView.text = formatDuration(
+                                    minOf(
+                                        playerAdapter.currentPosition + 60_000,
+                                        playerAdapter.duration
+                                    )
+                                ) + "/" + formatDuration(playerAdapter.duration)
+                                animateIndicator(indicatorView)
+                            }
+                        }
+                    }
+                    KeyEvent.KEYCODE_DPAD_LEFT -> {
+                        isShowOrHideControlsOverlayOnUserInteraction = event.action != KeyEvent.ACTION_DOWN
+                        if (event.action == KeyEvent.ACTION_DOWN) {
+                            if(isVod) {
+                                val indicatorTextView =
+                                    view.findViewById<TextView>(R.id.indicatorTextView)
+                                indicatorTextView.text = formatDuration(
+                                    maxOf(
+                                        playerAdapter.currentPosition - 60_000,
+                                        0
+                                    )
+                                ) + "/" + formatDuration(playerAdapter.duration)
+                                animateIndicator(indicatorView)
+                            }
+                        }
+                    }
+                }
+                mTransportControlGlue.onKey(view, keyCode, event)
+            }
 
         }
+    }
+    private fun animateIndicator(indicatorView: View) {indicatorView.animate()
+        .withEndAction {
+            indicatorView.isVisible = false
+            indicatorView.scaleX = 1F
+            indicatorView.scaleY = 1F
+        }
+        .withStartAction {
+            indicatorView.isVisible = true
+            indicatorView.alpha = 1F
+        }
+        .scaleX(2f)
+        .scaleY(2f)
+        .setDuration(1000) // Adjust the duration as needed
+        .setInterpolator(AccelerateDecelerateInterpolator())
+        .start()
     }
 
     override fun onPause() {
@@ -143,10 +204,8 @@ $url"""
     }
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val view = super.onCreateView(inflater, container, savedInstanceState) as ViewGroup
-        //fastForwardIndicatorView = inflater.inflate(R.layout.view_playback_forward, view, false)
-        //view.addView(fastForwardIndicatorView)
-        //rewindIndicatorView = inflater.inflate(R.layout.view_playback_rewind, view, false)
-        //view.addView(rewindIndicatorView)
+        indicatorView = inflater.inflate(R.layout.view_playback_indicator, view, false)
+        view.addView(indicatorView)
         return view
     }
 
@@ -194,6 +253,14 @@ $url"""
 
         return false
     }
+    fun formatDuration(milliseconds: Long): String {
+        val hours = milliseconds / (1000 * 60 * 60)
+        val minutes = (milliseconds % (1000 * 60 * 60)) / (1000 * 60)
+        val seconds = (milliseconds % (1000 * 60)) / 1000
+        return String.format("%02d:%02d:%02d", hours, minutes, seconds)
+    }
+
+
 
 
 

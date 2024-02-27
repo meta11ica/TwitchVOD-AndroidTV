@@ -1,6 +1,7 @@
 package meta11ica.tn.twitchvod
 
 import android.content.Context
+import android.util.Log
 import android.view.KeyEvent
 import android.view.View
 import androidx.leanback.media.PlaybackTransportControlGlue
@@ -10,8 +11,8 @@ import androidx.leanback.widget.PlaybackControlsRow
 
 class BasicTransportControlsGlue(
     context: Context?,
-    playerAdapter: meta11ica.tn.twitchvod.BasicMediaPlayerAdapter,
-) : PlaybackTransportControlGlue<meta11ica.tn.twitchvod.BasicMediaPlayerAdapter>(context, playerAdapter) {
+    playerAdapter: BasicMediaPlayerAdapter,
+) : PlaybackTransportControlGlue<BasicMediaPlayerAdapter>(context, playerAdapter) {
     // Primary actions
     private val forwardAction = PlaybackControlsRow.FastForwardAction(context)
     private val rewindAction = PlaybackControlsRow.RewindAction(context)
@@ -31,9 +32,11 @@ class BasicTransportControlsGlue(
     }
 
     override fun onActionClicked(action: Action) {
-
         when (action) {
-            forwardAction -> playerAdapter.fastForward()
+            forwardAction -> {
+                playerAdapter.fastForward()  // Fast forward to the desired position
+
+            }
             rewindAction -> playerAdapter.rewind()
             else -> super.onActionClicked(action)
         }
@@ -47,6 +50,9 @@ class BasicTransportControlsGlue(
         super.onPreparedStateChanged()
         playWhenPrepared()
         updateMovieInfo(currentMovie)
+
+        // Hide the seekbar after playback starts
+        host?.isControlsOverlayAutoHideEnabled = true
     }
 
     private fun updateMovieInfo(movie: Movie?) {
@@ -78,5 +84,6 @@ class BasicTransportControlsGlue(
             else -> super.onKey(v, keyCode, event)
         }
     }
+
 
 }
