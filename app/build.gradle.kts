@@ -74,6 +74,7 @@ dependencies {
     implementation("androidx.preference:preference:1.2.1")
     implementation("com.google.android.flexbox:flexbox:3.0.0")
     implementation("com.google.android.material:material:1.11.0")
+    implementation("androidx.media3:media3-ui:1.2.1")
 
     val leanback_version = "1.2.0-alpha04"
     implementation("io.karn:khttp-android:-SNAPSHOT")
@@ -89,7 +90,10 @@ dependencies {
     implementation("androidx.navigation:navigation-fragment-ktx:2.7.6")
     implementation("androidx.navigation:navigation-ui-ktx:2.7.6")
     implementation("com.squareup.okhttp3:okhttp:4.9.1")
-
+    implementation("androidx.media3:media3-exoplayer:1.2.1")
+    implementation("androidx.media3:media3-ui-leanback:1.2.1")
+    implementation("androidx.media3:media3-session:1.2.1")
+    implementation("androidx.media3:media3-exoplayer-hls:1.2.1")
 
 }
 

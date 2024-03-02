@@ -83,10 +83,8 @@ lateinit var sharedPrefs: SharedPreferences
     }
 
     override fun onQueryTextSubmit(query: String?): Boolean {
-        //TODO("Not yet implemented")
         lifecycleScope.launch {
             if (query != null) {
-                Log.d("onQueryTextSubmit", query)
                 if (query.uppercase() in mapStreamerId){
                     if (mapStreamerId.size>1) {
                         streamerId = streamerId.filter { it != mapStreamerId[query.uppercase()] }

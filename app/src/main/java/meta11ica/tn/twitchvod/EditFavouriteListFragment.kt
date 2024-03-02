@@ -156,7 +156,6 @@ class EditFavouriteListFragment : Fragment() {
             val removedIndex = streamers.indexOf(streamer)
             if (removedIndex != -1) {
                 streamers.removeAt(removedIndex)
-                Log.d("11111111", streamers.toString())
                 sharedPrefs.edit()?.remove("favourite_streamers")?.commit()
                 sharedPrefs.edit()
                     ?.putString("favourite_streamers", streamers.joinToString(separator = ","))

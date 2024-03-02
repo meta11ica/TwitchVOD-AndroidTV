@@ -24,7 +24,6 @@ class PlaybackActivity : FragmentActivity() {
     }
     override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
         super.dispatchTouchEvent(ev)
-        Log.d("LOGLOGLOG", ev.toString()+"\n"+super.dispatchTouchEvent(ev).toString())
         val fragmentById: Fragment? =
             supportFragmentManager.findFragmentById(R.id.content)
         if (fragmentById is PlaybackVideoFragment) {
