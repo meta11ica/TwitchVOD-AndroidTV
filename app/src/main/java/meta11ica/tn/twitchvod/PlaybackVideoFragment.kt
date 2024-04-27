@@ -1,7 +1,10 @@
 package meta11ica.tn.twitchvod
 
-import android.net.Uri
+import android.content.Intent
+import android.content.SharedPreferences
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.os.StrictMode
 import android.util.Log
 import android.view.KeyEvent
@@ -14,30 +17,32 @@ import androidx.annotation.OptIn
 import androidx.core.view.isVisible
 import androidx.leanback.app.VideoSupportFragment
 import androidx.leanback.app.VideoSupportFragmentGlueHost
-import androidx.leanback.media.PlaybackTransportControlGlue
-import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MimeTypes
-import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.ui.PlayerView
 import khttp.post
-import kotlinx.coroutines.launch
 import org.json.JSONObject
 import java.net.URL
 import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.Date
 import androidx.media3.ui.leanback.LeanbackPlayerAdapter
+import org.json.JSONArray
 
 
 /** Handles video playback with media controls. */
-class PlaybackVideoFragment : VideoSupportFragment() {
+class PlaybackVideoFragment(private val watchFromPosition: Long = 0) : VideoSupportFragment() {
 
     private lateinit var mTransportControlGlue: BasicTransportControlsGlue
     private lateinit var indicatorView: View
     private lateinit var player: ExoPlayer
+    private lateinit var handler: Handler
+    private lateinit var runnable: Runnable
+    lateinit var sharedPrefs: SharedPreferences
+    private lateinit var movie: Movie
+
+
     var isVod: Boolean = false
 
 
@@ -45,10 +50,16 @@ class PlaybackVideoFragment : VideoSupportFragment() {
 
     @OptIn(UnstableApi::class) override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val movie = activity?.intent?.getSerializableExtra(DetailsActivity.MOVIE) as Movie
+        sharedPrefs = requireActivity().getSharedPreferences("Streamers",  0)!!
+        if (requireActivity().intent.hasExtra(DetailsActivity.MOVIE)) {
+            movie = activity?.intent?.getSerializableExtra(DetailsActivity.MOVIE) as Movie
+        } else {
+            movie = activity?.intent?.getSerializableExtra(PlaybackActivity.MOVIE) as Movie
+        }
 
-        val (_, title, description, _, _, videoUrl) =
-            activity?.intent?.getSerializableExtra(DetailsActivity.MOVIE) as Movie
+        val title = movie.title
+        val description = movie.description
+        val videoUrl = movie.videoUrl
 
         val policy = StrictMode.ThreadPolicy.Builder().permitAll().build()
 
@@ -61,18 +72,19 @@ class PlaybackVideoFragment : VideoSupportFragment() {
             val playerAdapter = LeanbackPlayerAdapter(requireContext(),player,500)
             mTransportControlGlue = BasicTransportControlsGlue(requireContext(), playerAdapter,movie,isVod)
             mTransportControlGlue.host = VideoSupportFragmentGlueHost(this@PlaybackVideoFragment)
-            movie.videoUrl = finalVideoUrl
+            //movie.videoUrl = finalVideoUrl
             val mediaItem = MediaItem.Builder()
                 .setUri(finalVideoUrl)
                 .setMimeType(MimeTypes.APPLICATION_M3U8)
                 .build()
 
-            player.setMediaItem(mediaItem)
-            player.prepare()
+        player.setMediaItem(mediaItem)
+        player.seekTo(0, watchFromPosition)
+
+        player.prepare()
 
             mTransportControlGlue.title = title
             mTransportControlGlue.subtitle = description
-
             setOnKeyInterceptListener { view, keyCode, event ->
                 if (isControlsOverlayVisible || event.repeatCount > 0) {
                     isShowOrHideControlsOverlayOnUserInteraction = true
@@ -133,6 +145,7 @@ class PlaybackVideoFragment : VideoSupportFragment() {
 
     override fun onPause() {
         super.onPause()
+        handler.removeCallbacks(runnable)
         mTransportControlGlue.pause()
     }
 
@@ -142,9 +155,41 @@ class PlaybackVideoFragment : VideoSupportFragment() {
         savedInstanceState: Bundle?
     ): View? {
         val view = super.onCreateView(inflater, container, savedInstanceState) as ViewGroup
+
         indicatorView = inflater.inflate(R.layout.view_playback_indicator, view, false)
         view.addView(indicatorView)
         return view
+    }
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        updateWatchList()
+        handler = Handler(Looper.getMainLooper())
+        // Initialize Runnable
+        runnable = Runnable {
+            if(isVod) {
+                val editor = sharedPrefs.edit()
+                val streamUid = movie.id.toString()
+                editor.putLong(streamUid, player.currentPosition)
+                editor.putInt(
+                    "$streamUid-progress",
+                    (player.currentPosition * 100 / player.duration).toInt()
+                ).apply()
+
+                val intent = Intent("com.example.SHARED_PREF_CHANGED")
+                activity?.sendBroadcast(intent)
+                // Your code to execute every 10 seconds goes here
+                // etc.
+                // Schedule the next execution
+            }
+            handler.postDelayed(runnable, 10000) // 10 seconds delay
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Start executing the code every 10 seconds when the fragment is resumed
+        handler.postDelayed(runnable, 10000) // 10 seconds delay
     }
     override fun onDestroyView() {
         super.onDestroyView()
@@ -170,7 +215,6 @@ class PlaybackVideoFragment : VideoSupportFragment() {
 
         val sortedDict = resolutions.keys.sortedDescending()
         val orderedResolutions = sortedDict.associateWith { resolutions[it] }
-
         val currentURL = URL(vodData?.getString("seekPreviewsURL"))
         val domain = currentURL.host
         val paths = currentURL.path.split("/")
@@ -273,4 +317,44 @@ $url"""
         val seconds = (milliseconds % (1000 * 60)) / 1000
         return String.format("%02d:%02d:%02d", hours, minutes, seconds)
     }
+
+    private fun updateWatchList() {
+        if (isVod) {
+            //val currentStream = allStreams[player.currentMediaItemIndex]
+            val currentStream = movie
+            val strExistingWatchList = if (sharedPrefs.contains("watchList")) sharedPrefs.getString(
+                "watchList",
+                ""
+            ) else ""
+            lateinit var watchList: JSONArray
+            if (strExistingWatchList!!.isNotEmpty()) {
+                watchList = JSONArray(strExistingWatchList)
+                var found = false
+                var i = 0
+
+                while (i < watchList.length() && !found) {
+                    val streamElement = Movie.stringToMovie(watchList.getString(i))
+
+                    if (streamElement.id == currentStream.id) {
+                        found = true
+                        watchList.put(streamElement.toString())
+                        watchList.remove(i)
+                    }
+                    i++
+                }
+                if (!found) {
+                    watchList.put(currentStream.toString())
+                }
+            } else {
+                watchList = JSONArray()
+                watchList.put(currentStream.toString())
+            }
+            sharedPrefs.edit().putString("watchList", watchList.toString()).apply()
+            val intent = Intent("com.example.SHARED_PREF_CHANGED")
+            activity?.sendBroadcast(intent)
+        }
+    }
+
+
+
 }

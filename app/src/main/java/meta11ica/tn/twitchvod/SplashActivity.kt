@@ -67,80 +67,10 @@ class SplashActivity : AppCompatActivity() {
         val editor = sharedPrefs.edit()
         // the first use of the shared preference will trigger its initialisation
         editor?.putBoolean("initialized", true)
-        val fake = false
 
 
         val streamerArray = JSONArray()
 
-
-        if(fake)
-        {
-            val title = arrayOf(
-                "Category Zero 2010_ Year in Review",
-                "Google Demo Slam_ 20ft Search",
-                "Introducing Gmail Blue",
-                "Introducing Google Fiber to the Pole",
-                "Introducing Google Nose"
-            )
-            val description = arrayOf("Fusce id nisi turpis. Praesent viverra bibendum semper. ",
-                "Donec tristique, orci sed semper lacinia, quam erat rhoncus massa, non congue tellus est ",
-                "quis tellus. Sed mollis orci venenatis quam scelerisque accumsan. Curabitur a massa sit ",
-                "amet mi accumsan mollis sed et magna. Vivamus sed aliquam risus. Nulla eget dolor in elit ",
-                "facilisis mattis. Ut aliquet luctus lacus. Phasellus nec commodo erat. Praesent tempus id ")
-            val studio = arrayOf(
-                "Studio Zero",
-                "Studio One",
-                "Studio Two",
-                "Studio Three",
-                "Studio Four"
-            )
-            val videoUrl = arrayOf(
-                "https://commondatastorage.googleapis.com/android-tv/Sample%20videos/Zeitgeist/Zeitgeist%202010_%20Year%20in%20Review.mp4",
-                "https://commondatastorage.googleapis.com/android-tv/Sample%20videos/Demo%20Slam/Google%20Demo%20Slam_%2020ft%20Search.mp4",
-                "https://commondatastorage.googleapis.com/android-tv/Sample%20videos/April%20Fool's%202013/Introducing%20Gmail%20Blue.mp4",
-                "https://commondatastorage.googleapis.com/android-tv/Sample%20videos/April%20Fool's%202013/Introducing%20Google%20Fiber%20to%20the%20Pole.mp4",
-                "https://commondatastorage.googleapis.com/android-tv/Sample%20videos/April%20Fool's%202013/Introducing%20Google%20Nose.mp4"
-            )
-            val bgImageUrl = arrayOf(
-                "https://commondatastorage.googleapis.com/android-tv/Sample%20videos/Zeitgeist/Zeitgeist%202010_%20Year%20in%20Review/bg.jpg",
-                "https://commondatastorage.googleapis.com/android-tv/Sample%20videos/Demo%20Slam/Google%20Demo%20Slam_%2020ft%20Search/bg.jpg",
-                "https://commondatastorage.googleapis.com/android-tv/Sample%20videos/April%20Fool's%202013/Introducing%20Gmail%20Blue/bg.jpg",
-                "https://commondatastorage.googleapis.com/android-tv/Sample%20videos/April%20Fool's%202013/Introducing%20Google%20Fiber%20to%20the%20Pole/bg.jpg",
-                "https://commondatastorage.googleapis.com/android-tv/Sample%20videos/April%20Fool's%202013/Introducing%20Google%20Nose/bg.jpg"
-            )
-            val cardImageUrl = arrayOf(
-                "https://commondatastorage.googleapis.com/android-tv/Sample%20videos/Zeitgeist/Zeitgeist%202010_%20Year%20in%20Review/card.jpg",
-                "https://commondatastorage.googleapis.com/android-tv/Sample%20videos/Demo%20Slam/Google%20Demo%20Slam_%2020ft%20Search/card.jpg",
-                "https://commondatastorage.googleapis.com/android-tv/Sample%20videos/April%20Fool's%202013/Introducing%20Gmail%20Blue/card.jpg",
-                "https://commondatastorage.googleapis.com/android-tv/Sample%20videos/April%20Fool's%202013/Introducing%20Google%20Fiber%20to%20the%20Pole/card.jpg",
-                "https://commondatastorage.googleapis.com/android-tv/Sample%20videos/April%20Fool's%202013/Introducing%20Google%20Nose/card.jpg"
-            )
-            for (streamer in streamerId) {
-
-                // body of loop
-                val streamsArray = JSONArray()
-                for (i in studio.indices) {
-                    val streamObject = JSONObject()
-                    streamObject.put("title", title[i])
-                    streamObject.put("description", description[i])
-                    streamObject.put("studio", studio[i])
-                    streamObject.put("videoUrl", videoUrl[i])
-                    streamObject.put("bgImageUrl", bgImageUrl[i])
-                    streamObject.put("cardImageUrl", cardImageUrl[i])
-                    streamsArray.put(streamObject)
-                }
-                val streamerObject = JSONObject()
-                streamerObject.put("streamer_id", streamer)
-                streamerObject.put("streams", streamsArray)
-                streamerArray.put(streamerObject)
-
-
-            }
-            editor?.putString("movies",streamerArray.toString())
-            editor.commit()
-
-        }
-        else {
 
             lifecycleScope.launch {
 
@@ -154,6 +84,8 @@ class SplashActivity : AppCompatActivity() {
                     val userJsonObject = JSONArray(strResponse).getJSONObject(it)
                     val userLiveJsonObject = JSONArray(strLiveResponse).getJSONObject(it)
                     val title: MutableList<String> = ArrayList()
+                    val duration: MutableList<Long> = ArrayList()
+                    val id: MutableList<Long> = ArrayList()
                     val description: MutableList<String> = ArrayList()
                     val studio: MutableList<String> = ArrayList()
                     val bgImageUrl: MutableList<String> = ArrayList()
@@ -166,8 +98,11 @@ class SplashActivity : AppCompatActivity() {
 
     if (!userLiveJsonObject.toString().contains("\"stream\":null")) {
         val liveUrl = getLiveURL(favStreamers?.get(it))
+        Log.d("1111111111111",userLiveJsonObject.getJSONObject("data").toString())
+        id.add(userLiveJsonObject.getJSONObject("data").getJSONObject("user").getJSONObject("broadcastSettings").getLong("id"))
         title.add(userLiveJsonObject.getJSONObject("data").getJSONObject("user").getJSONObject("broadcastSettings").getString("title"))
         description.add(userLiveJsonObject.getJSONObject("data").getJSONObject("user").getJSONObject("broadcastSettings").getString("title"))
+        duration.add(0)
         studio.add(("Twitch"))
         videoUrl.add(liveUrl)
         bgImageUrl.add(
@@ -189,10 +124,12 @@ class SplashActivity : AppCompatActivity() {
         }
         description.add(desc)
         studio.add(("Twitch"))
+        id.add(item.getJSONObject("node").getLong("id"))
         videoUrl.add(
             "https://www.twitch.tv/videos/" + item.getJSONObject("node")
                 .getString("id")
         )
+        duration.add(item.getJSONObject("node").getLong("lengthSeconds"))
         bgImageUrl.add(
             item.getJSONObject("node").getString("previewThumbnailURL")
         )
@@ -205,11 +142,16 @@ catch(e: Exception) {(Log.e("error","user problem"))}
 
 
                     val streamsArray = JSONArray()
+                    Log.d("11111111111",id.toString())
+                    Log.d("11111111111",title.toString())
+
                     for (i in studio.indices) {
                         val streamObject = JSONObject()
+                        streamObject.put("id", id[i])
                         streamObject.put("title", title[i])
                         streamObject.put("description", description[i])
                         streamObject.put("studio", studio[i])
+                        streamObject.put("duration", duration[i])
                         streamObject.put("videoUrl", videoUrl[i])
                         streamObject.put("bgImageUrl", bgImageUrl[i])
                         streamObject.put("cardImageUrl", cardImageUrl[i])
@@ -222,19 +164,19 @@ catch(e: Exception) {(Log.e("error","user problem"))}
 
                 }
                 editor?.putString("movies",streamerArray.toString())
-                editor.commit()
+                editor.apply()
 
             }
 
 
-        }
+
 
     }
 
     fun makeTwitchPostRequest(favStreamers: List<String>): Array<String> {
-            val vodResponse = fetchGQL(buildVODStreamsObjectRequest(favStreamers))
-            val liveResponse = fetchGQL(buildLiveStreamsObjectRequest(favStreamers))
-            return arrayOf(vodResponse,liveResponse)
+        val vodResponse = fetchGQL(buildVODStreamsObjectRequest(favStreamers))
+        val liveResponse = fetchGQL(buildLiveStreamsObjectRequest(favStreamers))
+        return arrayOf(vodResponse,liveResponse)
     }
 
 

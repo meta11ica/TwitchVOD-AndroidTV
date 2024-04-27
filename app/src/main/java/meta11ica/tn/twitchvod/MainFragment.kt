@@ -1,7 +1,10 @@
 package meta11ica.tn.twitchvod
 
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
+import android.content.SharedPreferences
 import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.os.Bundle
@@ -38,6 +41,7 @@ import org.json.JSONArray
 import java.io.File
 import java.util.Timer
 import java.util.TimerTask
+import kotlin.math.max
 import kotlin.math.min
 
 
@@ -52,6 +56,22 @@ class MainFragment : BrowseSupportFragment() {
     private lateinit var mMetrics: DisplayMetrics
     private var mBackgroundTimer: Timer? = null
     private var mBackgroundUri: String? = null
+    private lateinit var sharedPrefs: SharedPreferences
+    // Register a BroadcastReceiver to listen for SharedPreferences changes
+    val receiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action == "com.example.SHARED_PREF_CHANGED") {
+                // Update UI or take necessary action
+                updateWatchList()
+                rowsAdapter.notifyArrayItemRangeChanged(0, rowsAdapter.size())
+                rowsAdapter.notifyArrayItemRangeChanged(0, rowsAdapter.size())
+            }
+        }
+    }
+
+
+    val listRowStreamContinueWatchAdapter = ArrayObjectAdapter(StreamPresenter())
+    val rowsAdapter = ArrayObjectAdapter(ListRowPresenter())
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         Log.i(TAG, "onCreate")
@@ -62,6 +82,14 @@ class MainFragment : BrowseSupportFragment() {
         setupUIElements()
         loadRows()
         setupEventListeners()
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        // Register the BroadcastReceiver in onViewCreated
+        val filter = IntentFilter("com.example.SHARED_PREF_CHANGED")
+        activity?.registerReceiver(receiver, filter)
     }
 
     override fun onDestroy() {
@@ -93,10 +121,29 @@ class MainFragment : BrowseSupportFragment() {
 
     private fun loadRows() {
 
-        val sharedPrefs =activity?.getSharedPreferences("Streamers",  0)
+        sharedPrefs = requireActivity().getSharedPreferences("Streamers",  0)!!
+
+        var headerIndex = 0
+
+        try {
+            updateWatchList()
+
+            val header = HeaderItem(
+                headerIndex.toLong(),
+                resources.getString(R.string.header_continue_watching)
+            )
+            rowsAdapter.add(ListRow(header, listRowStreamContinueWatchAdapter))
+            headerIndex++
+
+        } catch(e : Exception)
+        {
+            Toast.makeText(requireActivity(), "Problem loading history, please erase the history.", Toast.LENGTH_SHORT)
+                .show()
+        }
+
+
         val list = JSONArray(sharedPrefs?.getString("movies","empty"))
-        val rowsAdapter = ArrayObjectAdapter(ListRowPresenter())
-        val cardPresenter = CardPresenter()
+        val cardPresenter = StreamPresenter()
         for (i in 0 until list.length()) {
             if (i != 0) {
                 //Collections.shuffle(list)
@@ -106,7 +153,8 @@ class MainFragment : BrowseSupportFragment() {
             for (j in 0 until min(NUM_COLS,JSONArray(streamer.getString("streams")).length())) {
                 val stream = JSONArray(streamer.getString("streams"))?.getJSONObject(j)
                 val movie = Movie()
-                movie.id = j.toLong()
+                movie.id = stream?.getLong("id")!!
+                movie.duration = stream.getLong("duration")
                 movie.title = stream?.getString("title")
                 movie.description = stream?.getString("description")
                 movie.studio = stream?.getString("studio")
@@ -114,10 +162,11 @@ class MainFragment : BrowseSupportFragment() {
                 movie.backgroundImageUrl = stream?.getString("bgImageUrl")
                 movie.videoUrl = stream?.getString("videoUrl")
 
-                (movie ?: null)?.let { listRowAdapter.add(it) }
+                listRowAdapter.add(movie)
             }
-            val header = HeaderItem(i.toLong(), streamer.getString("streamer_id"))
+            val header = HeaderItem(headerIndex.toLong(), streamer.getString("streamer_id"))
             rowsAdapter.add(ListRow(header, listRowAdapter))
+            headerIndex++
         }
 
         val gridHeader = HeaderItem(NUM_ROWS.toLong(), "PREFERENCES")
@@ -128,6 +177,7 @@ class MainFragment : BrowseSupportFragment() {
         //gridRowAdapter.add(resources.getString(R.string.grid_view))
         //gridRowAdapter.add(getString(R.string.error_fragment))
         gridRowAdapter.add(resources.getString(R.string.edit_favourite_list))
+        gridRowAdapter.add(resources.getString(R.string.clear_watch_history))
         rowsAdapter.add(ListRow(gridHeader, gridRowAdapter))
 
         adapter = rowsAdapter
@@ -155,20 +205,29 @@ class MainFragment : BrowseSupportFragment() {
         ) {
 
             if (item is Movie) {
-                val intent = Intent(activity!!, DetailsActivity::class.java)
-                intent.putExtra(DetailsActivity.MOVIE, item)
-                intent.putExtra(DetailsActivity.ROW, row.id)
 
-                val bundle = (itemViewHolder.view as ImageCardView).mainImageView?.let {
-                    ActivityOptionsCompat.makeSceneTransitionAnimation(
-                        activity!!,
-                        it,
-                        DetailsActivity.SHARED_ELEMENT_NAME
-                    )
-                        .toBundle()
+                if (row.id.toInt() == 0) {
+                    val intent = Intent(activity!!, PlaybackActivity::class.java)
+                    intent.putExtra(PlaybackActivity.CONFIRMATION_PROMPT, false)
+                    intent.putExtra(PlaybackActivity.MOVIE, item)
+                    startActivity(intent)
+                } else {
+
+                    val intent = Intent(activity!!, DetailsActivity::class.java)
+                    intent.putExtra(DetailsActivity.MOVIE, item)
+                    intent.putExtra(DetailsActivity.ROW, row.id - 1)
+
+                    val bundle = (itemViewHolder.view as CustomImageCardView).mainImage?.let {
+                        ActivityOptionsCompat.makeSceneTransitionAnimation(
+                            activity!!,
+                            it,
+                            DetailsActivity.SHARED_ELEMENT_NAME
+                        )
+                            .toBundle()
+                    }
+                    startActivity(intent, bundle)
                 }
-                startActivity(intent, bundle)
-            }  else if (item is String) {
+            } else if (item is String) {
                 /*if (item.contains(getString(R.string.error_fragment))) {
                     val intent = Intent(activity!!, BrowseErrorActivity::class.java)
                     startActivity(intent)
@@ -179,8 +238,30 @@ class MainFragment : BrowseSupportFragment() {
                         ?.replace(R.id.main_browse_fragment, EditFavouriteListFragment())
                         ?.commit()
                 }
+                else if (item.contains(getString(R.string.clear_watch_history))) {
+                    val watchList = if (sharedPrefs.contains("watchList")) JSONArray(
+                        sharedPrefs.getString(
+                            "watchList",
+                            ""
+                        )
+                    ) else JSONArray()
+                    val editor = sharedPrefs.edit()
+                    for (i in 0 until watchList.length()) {
+                        val streamId = Movie.stringToMovie(watchList.getString(i)).id.toString()
 
-                if (item.contains(getString(R.string.update_channel_name))) {
+                        if (sharedPrefs.contains(streamId)) editor.remove(streamId)
+                        if (sharedPrefs.contains("$streamId-progress")) editor.remove("$streamId-progress")
+
+                    }
+                    editor.remove("watchList")
+                    editor.apply()
+                    val intent = Intent("com.example.SHARED_PREF_CHANGED")
+                    activity?.sendBroadcast(intent)
+                    Toast.makeText(activity!!, R.string.success_clear_history, Toast.LENGTH_SHORT)
+                        .show()
+                }
+
+                else if (item.contains(getString(R.string.update_channel_name))) {
                     val preferences = context?.getSharedPreferences(
                         context?.packageName + "_AutoUpdateApk",
                         Context.MODE_PRIVATE
@@ -220,11 +301,6 @@ class MainFragment : BrowseSupportFragment() {
 
                     }
                 }
-                /*else {
-                    Toast.makeText(activity!!, item, Toast.LENGTH_SHORT).show()
-
-
-                }*/
 
             }
         }
@@ -262,6 +338,45 @@ class MainFragment : BrowseSupportFragment() {
         if (myView != null) {
             myView.background = backgroundDrawable
         }
+    }
+
+    fun updateWatchList() {
+        listRowStreamContinueWatchAdapter.clear()
+        val strExistingWatchList = sharedPrefs?.getString("watchList", "")
+        val streamWatchList: MutableList<Movie> = arrayListOf()
+
+        if (!strExistingWatchList.isNullOrEmpty()) {
+            val watchList = JSONArray(strExistingWatchList)
+            val historyLength = resources.getInteger(R.integer.maximum_history_size)
+            for (i in watchList.length() - 1 downTo max(0, watchList.length() - historyLength)) {
+                val streamElement = Movie.stringToMovie(watchList.getString(i))
+                streamElement.progress =
+                    sharedPrefs.getInt("${streamElement.id}-progress", 0)
+
+                streamWatchList.add(streamElement)
+                listRowStreamContinueWatchAdapter.add(streamElement)
+            }
+            if (watchList.length() > historyLength) {
+                val lastXObjects = getLastXObjects(watchList, historyLength)
+                sharedPrefs.edit().putString("watchList", lastXObjects.toString()).apply()
+            }
+        }
+        // Notify the adapter that the data set has changed
+        listRowStreamContinueWatchAdapter.notifyArrayItemRangeChanged(0, listRowStreamContinueWatchAdapter.size())
+    }
+
+    fun getLastXObjects(jsonArray: JSONArray,historyLength: Int): JSONArray {
+        val length = jsonArray.length()
+        val resultArray = JSONArray()
+
+        val startIndex = length - historyLength
+        val endIndex = if (startIndex < 0) 0 else startIndex
+
+        for (i in endIndex until length) {
+            val obj = jsonArray.getString(i)
+            resultArray.put(obj)
+        }
+        return resultArray
     }
 
     companion object {

@@ -5,6 +5,7 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.graphics.drawable.Drawable
+import android.util.Log
 import androidx.leanback.app.DetailsSupportFragment
 import androidx.leanback.app.DetailsSupportFragmentBackgroundController
 import androidx.leanback.widget.Action
@@ -14,7 +15,6 @@ import androidx.leanback.widget.DetailsOverviewRow
 import androidx.leanback.widget.FullWidthDetailsOverviewRowPresenter
 import androidx.leanback.widget.FullWidthDetailsOverviewSharedElementHelper
 import androidx.leanback.widget.HeaderItem
-import androidx.leanback.widget.ImageCardView
 import androidx.leanback.widget.ListRow
 import androidx.leanback.widget.ListRowPresenter
 import androidx.leanback.widget.OnActionClickedListener
@@ -24,7 +24,6 @@ import androidx.leanback.widget.Row
 import androidx.leanback.widget.RowPresenter
 import androidx.core.app.ActivityOptionsCompat
 import androidx.core.content.ContextCompat
-import android.util.Log
 import android.widget.Toast
 
 import com.bumptech.glide.Glide
@@ -55,6 +54,7 @@ class VideoDetailsFragment : DetailsSupportFragment() {
         mDetailsBackground = DetailsSupportFragmentBackgroundController(this)
 
         mSelectedMovie = requireActivity().intent.getSerializableExtra(DetailsActivity.MOVIE) as Movie
+
         mSelectedRow = (requireActivity().intent.getSerializableExtra(DetailsActivity.ROW) as Long).toInt()
         if (mSelectedMovie != null) {
             mPresenterSelector = ClassPresenterSelector()
@@ -112,7 +112,7 @@ class VideoDetailsFragment : DetailsSupportFragment() {
 
         actionAdapter.add(
             Action(
-                ACTION_WATCH_TRAILER,
+                ACTION_WATCH_NOW,
                 resources.getString(R.string.watch_trailer_1),
             )
         )
@@ -138,7 +138,7 @@ class VideoDetailsFragment : DetailsSupportFragment() {
         detailsPresenter.isParticipatingEntranceTransition = true
 
         detailsPresenter.onActionClickedListener = OnActionClickedListener { action ->
-            if (action.id == ACTION_WATCH_TRAILER) {
+            if (action.id == ACTION_WATCH_NOW) {
                 val intent = Intent(requireActivity(), PlaybackActivity::class.java)
                 intent.putExtra(DetailsActivity.MOVIE, mSelectedMovie)
                 startActivity(intent)
@@ -152,24 +152,25 @@ class VideoDetailsFragment : DetailsSupportFragment() {
     private fun setupRelatedMovieListRow() {
         val subcategories = arrayOf(getString(R.string.related_movies))
         runBlocking {
-            val sharedPrefs = getActivity()?.getSharedPreferences("Streamers", 0)
+            val sharedPrefs = requireActivity().getSharedPreferences("Streamers", 0)
             var list = JSONArray(sharedPrefs?.getString("movies","empty"))
             val streamer = list.getJSONObject(mSelectedRow)
-            val listRowAdapter = ArrayObjectAdapter(CardPresenter())
+            val listRowAdapter = ArrayObjectAdapter(StreamPresenter())
         list = shuffleJsonArray(list)
 
 
         for (j in 0 until min(NUM_COLS,JSONArray(streamer.getString("streams")).length())) {
-            val stream = JSONArray(streamer.getString("streams"))?.getJSONObject(j)
+            val stream = JSONArray(streamer.getString("streams")).getJSONObject(j)
             val movie = Movie()
-            movie.id = j.toLong()
-            movie.title = stream?.getString("title")
-            movie.description = stream?.getString("description")
-            movie.studio = stream?.getString("studio")
-            movie.cardImageUrl = stream?.getString("cardImageUrl")
-            movie.backgroundImageUrl = stream?.getString("bgImageUrl")
-            movie.videoUrl = stream?.getString("videoUrl")
-            movie?.let { listRowAdapter.add(it) }
+            movie.id = stream?.getLong("id")!!
+            movie.duration = stream.getLong("duration")
+            movie.title = stream.getString("title")
+            movie.description = stream.getString("description")
+            movie.studio = stream.getString("studio")
+            movie.cardImageUrl = stream.getString("cardImageUrl")
+            movie.backgroundImageUrl = stream.getString("bgImageUrl")
+            movie.videoUrl = stream.getString("videoUrl")
+            listRowAdapter.add(movie)
         }
 
         val header = HeaderItem(0, subcategories[0])
@@ -203,18 +204,19 @@ fun shuffleJsonArray(jsonArray: JSONArray): JSONArray {
         ) {
             if (item is Movie) {
                 val intent = Intent(activity!!, DetailsActivity::class.java)
-                intent.putExtra(resources.getString(R.string.movie), mSelectedMovie)
+                intent.putExtra(resources.getString(R.string.movie), item)
+                intent.putExtra(DetailsActivity.ROW, mSelectedRow.toLong())
 
                 val bundle =
-                    (itemViewHolder?.view as ImageCardView).mainImageView?.let {
                         ActivityOptionsCompat.makeSceneTransitionAnimation(
                             activity!!,
-                            it,
+                            (itemViewHolder?.view as CustomImageCardView).mainImage,
                             DetailsActivity.SHARED_ELEMENT_NAME
                         )
                             .toBundle()
-                    }
+
                 startActivity(intent, bundle)
+
             }
         }
     }
@@ -222,9 +224,7 @@ fun shuffleJsonArray(jsonArray: JSONArray): JSONArray {
     companion object {
         private val TAG = "VideoDetailsFragment"
 
-        private val ACTION_WATCH_TRAILER = 1L
-        private val ACTION_RENT = 2L
-        private val ACTION_BUY = 3L
+        private val ACTION_WATCH_NOW = 1L
 
         private val DETAIL_THUMB_WIDTH = 274
         private val DETAIL_THUMB_HEIGHT = 274

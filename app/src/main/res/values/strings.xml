@@ -27,6 +27,7 @@
 
     <string name="next">Next</string>
     <string name="previous">Previous</string>
+    <string name="header_continue_watching">Continue watching</string>
     <string name="update_check_json">https://raw.githubusercontent.com/meta11ica/TwitchVOD-AndroidTV/master/app/release/output-metadata.json</string>
     <string name="update_channel_name">Update App</string>
     <string name="update_channel_description">Show update notifications</string>
@@ -71,4 +72,6 @@
         libero vel nunc consequat, quis tincidunt nisl eleifend. Cras bibendum enim a justo luctus
         vestibulum. Fusce dictum libero quis erat maximus, vitae volutpat diam dignissim.
     </string>
+    <string name="clear_watch_history">Clear watch history</string>
+    <string name="success_clear_history">History cleared successfully!</string>
 </resources>
