@@ -1,14 +1,11 @@
 # TwitchVOD-AndroidTV
 
-An Android TV Application to view Twitch VOD without sub.
+An Android TV Application to view Twitch.
 Inspired by the Leanback example from Google in Kotlin, and modified it for Twitch VOD no Sub.
-Please don't use it on Android phone and then complain, use Kiwi Browser and [this extension](https://github.com/meta11ica/mTwitchNoSub-also/releases) instead.
 
 
 ## Description
 
-Some streamers require sub on Twitch to replay a previous stream.
-This application allows to see your favourite streamer VODs without subbing.
 The method is inspired by the method of [besuper/TwitchNoSub](https://github.com/besuper/TwitchNoSub). All credits to it.
 Although it can be used on Android phones, it's buggy. So please don't use it on phones.
 For PC : An extension is available for Chrome, Firefox ([here](https://github.com/besuper/TwitchNoSub/releases))
