@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:lb="http://schemas.android.com/tools"
+    android:id="@+id/card_layout"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:background="?android:attr/selectableItemBackground">
+    <!-- Main Image -->
+    <ImageView
+        android:id="@+id/main_image"
+        lb:layout_viewType="main"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:scaleType="centerCrop"
+        android:adjustViewBounds="true"
+        android:contentDescription="@null"/>
+    <TextView
+        android:id="@+id/duration_text"
+        android:layout_width="wrap_content"
+        android:layout_height="20dp"
+        android:maxLines="1"
+        android:layout_alignParentRight="true"
+        android:gravity="center"
+        android:fontFamily="sans-serif-condensed"
+        android:text="HH:MM:SS"
+        android:textColor="@color/lb_basic_card_title_text_color"
+        android:background="@color/black"
+        android:paddingRight="2dp"
+        android:paddingLeft="2dp"
+        android:textSize="16dp"/>
+
+
+    <!-- Progress Bar -->
+    <ProgressBar
+        android:id="@+id/bar_progress"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="4dp"
+        android:layout_below="@id/main_image"
+        android:maxHeight="2dp"
+        android:minHeight="2dp"
+        />
+
+    <!-- Info Field -->
+    <RelativeLayout
+        lb:layout_viewType="info"
+        android:id="@+id/info_field"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_below="@id/bar_progress"
+        android:paddingStart="@dimen/lb_basic_card_info_padding_horizontal"
+        android:paddingEnd="@dimen/lb_basic_card_info_padding_horizontal"
+        android:paddingBottom="@dimen/lb_basic_card_info_padding_bottom"
+        android:layout_centerHorizontal="true">
+
+        <!-- Title ScrollView -->
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/title_scroll"
+            android:scrollbars="none">
+            <TextView
+                android:id="@+id/title_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_marginBottom="@dimen/lb_basic_card_info_text_margin"
+                android:maxLines="1"
+                android:fontFamily="sans-serif-condensed"
+                android:textColor="@color/lb_basic_card_title_text_color"
+                android:textSize="@dimen/lb_basic_card_title_text_size"
+                android:ellipsize="end"/>
+        </HorizontalScrollView>
+
+        <!-- Content ScrollView -->
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/content_scroll"
+            android:scrollbars="none"
+            android:layout_below="@id/title_scroll">
+            <TextView
+                android:id="@+id/content_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:scrollHorizontally="true"
+                android:layout_alignParentStart="true"
+                android:layout_toStartOf="@+id/extra_badge"
+                android:fontFamily="sans-serif-condensed"
+                app:layout_constraintTop_toBottomOf="@id/title_text"
+                android:textColor="@color/lb_basic_card_content_text_color"
+                android:textSize="@dimen/lb_basic_card_content_text_size"
+                android:ellipsize="none"
+                android:singleLine="true" />
+        </HorizontalScrollView>
+
+        <!-- Extra Badge -->
+        <ImageView
+            android:id="@+id/extra_badge"
+            android:layout_width="@dimen/lb_basic_card_info_badge_size"
+            android:layout_height="@dimen/lb_basic_card_info_badge_size"
+            android:layout_marginStart="@dimen/lb_basic_card_info_badge_margin"
+            android:layout_alignBottom="@id/content_scroll"
+            android:layout_alignParentBottom="true"
+            android:scaleType="fitCenter"
+            android:visibility="gone"
+            android:contentDescription="@null" />
+    </RelativeLayout>
+</RelativeLayout>

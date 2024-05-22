@@ -177,6 +177,7 @@ class PlaybackVideoFragment(private val watchFromPosition: Long = 0) : VideoSupp
                 ).apply()
 
                 val intent = Intent("com.example.SHARED_PREF_CHANGED")
+                intent.setPackage(context?.packageName)
                 activity?.sendBroadcast(intent)
                 // Your code to execute every 10 seconds goes here
                 // etc.
@@ -351,6 +352,7 @@ $url"""
             }
             sharedPrefs.edit().putString("watchList", watchList.toString()).apply()
             val intent = Intent("com.example.SHARED_PREF_CHANGED")
+            intent.setPackage(context?.packageName)
             activity?.sendBroadcast(intent)
         }
     }

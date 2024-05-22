@@ -1,0 +1,25 @@
+<!-- item_stream.xml -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="16dp">
+
+    <!-- You can customize this layout as needed to display stream information -->
+    <ImageView
+        android:id="@+id/imageStream"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:src="@drawable/default_background" />
+
+    <TextView
+        android:id="@+id/textStreamName"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:layout_marginStart="16dp"
+        android:textSize="16sp"
+        android:text="Stream Name"
+        android:textColor="@android:color/black" />
+
+</LinearLayout>

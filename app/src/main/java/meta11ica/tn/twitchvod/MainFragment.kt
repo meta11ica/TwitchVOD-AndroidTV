@@ -7,6 +7,7 @@ import android.content.IntentFilter
 import android.content.SharedPreferences
 import android.graphics.Color
 import android.graphics.drawable.Drawable
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -89,8 +90,11 @@ class MainFragment : BrowseSupportFragment() {
 
         // Register the BroadcastReceiver in onViewCreated
         val filter = IntentFilter("com.example.SHARED_PREF_CHANGED")
-        activity?.registerReceiver(receiver, filter)
-    }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            requireActivity().registerReceiver(receiver, filter, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            requireActivity().registerReceiver(receiver, filter)
+        }    }
 
     override fun onDestroy() {
         super.onDestroy()
