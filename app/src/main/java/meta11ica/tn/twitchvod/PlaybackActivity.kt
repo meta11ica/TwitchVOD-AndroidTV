@@ -22,10 +22,10 @@ class PlaybackActivity : FragmentActivity(),ContinueOrReplayFragment.ContinueOrR
         super.onCreate(savedInstanceState)
 
         if (savedInstanceState == null) {
-            if (intent.hasExtra(DetailsActivity.MOVIE)) {
-                stream = intent?.getSerializableExtra(DetailsActivity.MOVIE) as Movie
+            stream = if (intent.hasExtra(DetailsActivity.MOVIE)) {
+                intent?.getSerializableExtra(DetailsActivity.MOVIE) as Movie
             } else {
-                stream = intent?.getSerializableExtra(PlaybackActivity.MOVIE) as Movie
+                intent?.getSerializableExtra(PlaybackActivity.MOVIE) as Movie
             }
             val confirmationPrompt = intent.extras?.getBoolean(CONFIRMATION_PROMPT, true) ?: true
 
@@ -56,8 +56,8 @@ class PlaybackActivity : FragmentActivity(),ContinueOrReplayFragment.ContinueOrR
         var watchTime = 0L
         val sharedPrefs = getSharedPreferences("Streamers", 0)
         val streamUid = stream.id.toString()
-            if (sharedPrefs.contains(streamUid)) {
-                watchTime = sharedPrefs.getLong(streamUid, 0)
+        if (sharedPrefs.contains(streamUid)) {
+            watchTime = sharedPrefs.getLong(streamUid, 0)
         }
         return watchTime
     }

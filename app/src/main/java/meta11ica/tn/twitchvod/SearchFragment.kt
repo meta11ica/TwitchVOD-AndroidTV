@@ -1,12 +1,8 @@
 package meta11ica.tn.twitchvod
 
-import android.annotation.SuppressLint
 import android.content.Intent
-import android.content.SharedPreferences
 import android.os.Bundle
-import android.util.Log
 import android.view.View
-import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.leanback.app.SearchSupportFragment
 import androidx.leanback.widget.ArrayObjectAdapter
@@ -14,19 +10,26 @@ import androidx.leanback.widget.HeaderItem
 import androidx.leanback.widget.ListRow
 import androidx.leanback.widget.ListRowPresenter
 import androidx.leanback.widget.ObjectAdapter
-import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.launch
+import androidx.leanback.widget.OnItemViewClickedListener
+import androidx.leanback.widget.Presenter
+import androidx.leanback.widget.Row
+import androidx.leanback.widget.RowPresenter
+import org.json.JSONArray
 
 
 class SearchFragment : SearchSupportFragment(), SearchSupportFragment.SearchResultProvider {
-lateinit var sharedPrefs: SharedPreferences
-    lateinit var streamerId: List<String>
-    lateinit var mapStreamerId: Map<String,String>
+    private lateinit var adapter: ArrayObjectAdapter
+    var screenWidth: Int = 0
+    var screenHeight: Int = 0
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
         super.onCreate(savedInstanceState)
+        screenWidth = resources.displayMetrics.widthPixels
+        screenHeight = resources.displayMetrics.heightPixels
+
+        setupEventListeners()
         setSearchResultProvider(this)
     }
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -41,85 +44,115 @@ lateinit var sharedPrefs: SharedPreferences
     private fun navigateToMainFragment() {
         // Replace the current fragment with MainFragment
         this.activity?.finish()
-        val intent = Intent(this.activity, SplashActivity::class.java)
+        val intent = Intent(this.activity, MainActivity::class.java)
         startActivity(intent)
     }
 
-    @SuppressLint("SuspiciousIndentation")
     override fun getResultsAdapter(): ObjectAdapter {
-
-        sharedPrefs = activity?.getSharedPreferences("Streamers",  0)!!
-        streamerId = sharedPrefs.getString("favourite_streamers","[micode]").toString().split(",")
-        mapStreamerId = streamerId.associate { it.uppercase() to it }
-        val rowsAdapter = ArrayObjectAdapter(ListRowPresenter())
-
-
-        // Create a HeaderItem for the list row
-        val header = HeaderItem(0,getString(R.string.active_favourite_streamers))
-
-        // Create a ListRow to hold the search results
-        val listRowAdapter = ArrayObjectAdapter(TextPresenter())
-        // Use your TextPresenter here
-        val sortedStreamerId = streamerId.sorted()
-
-            if (sortedStreamerId.isNotEmpty()) {
-                for(streamer in sortedStreamerId) {
-                    listRowAdapter.add(streamer)
-                }
-            }
-
-
-        // Add more search results as needed
-
-        // Add the ListRow to the rowsAdapter
-        rowsAdapter.add(ListRow(header, listRowAdapter))
-
-        return rowsAdapter
+            adapter = ArrayObjectAdapter(ListRowPresenter())
+            return adapter
     }
 
     override fun onQueryTextChange(newQuery: String?): Boolean {
-        //TODO("Not yet implemented")
+        adapter.clear()
+        // Perform search based on the new query
+        searchTwitch(newQuery.orEmpty())
         return true
     }
 
     override fun onQueryTextSubmit(query: String?): Boolean {
-        lifecycleScope.launch {
-            if (query != null) {
-                if (query.uppercase() in mapStreamerId){
-                    if (mapStreamerId.size>1) {
-                        streamerId = streamerId.filter { it != mapStreamerId[query.uppercase()] }
-                        Toast.makeText(
-                            requireActivity(),
-                            "$query removed successfully!!",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
-                    else {
-                        Toast.makeText(
-                            requireActivity(),
-                            "$query not removed! List must contain at least 1",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
-                } else {
-                    streamerId = streamerId.plus(query)
-                    Toast.makeText(
-                        requireActivity(),
-                        "$query added successfully!!",
-                        Toast.LENGTH_SHORT
-                    ).show()
+        return true
+    }
 
-                }
-                sharedPrefs.edit()?.remove("favourite_streamers")?.commit()
-                sharedPrefs.edit()
-                    ?.putString("favourite_streamers", streamerId.joinToString(separator = ","))
-                    ?.commit();
 
+    private fun searchTwitch(query: String) {
+        val listStreamsRowAdapter = ArrayObjectAdapter(StreamPresenter(screenWidth/(NUM_COLS +1),screenHeight*7/24))
+        val listChannelsRowAdapter = ArrayObjectAdapter(ChannelPresenter(screenWidth/(NUM_COLS +1),screenHeight*7/24))
+
+        // Iterate over the map and add items to the adapter
+        if (query.isNotEmpty()) {
+
+            // Search Movies
+            val searchResult = Utils.fetchGQL(Utils.buildSearchObjectRequest(query))
+            val videosJsonEdge = JSONArray(searchResult).getJSONObject(0)
+                .getJSONObject("data").getJSONObject("searchFor")
+                .getJSONObject("videos").getJSONArray("edges")
+            val channelsJsonEdge = JSONArray(searchResult).getJSONObject(0)
+                .getJSONObject("data").getJSONObject("searchFor")
+                .getJSONObject("channels").getJSONArray("edges")
+            for (i in 0 until channelsJsonEdge.length()) {
+                val channel = Channel()
+                val channelItem = channelsJsonEdge.getJSONObject(i)
+                channel.id = channelItem.getJSONObject("item").getLong("id")
+                channel.login = channelItem.getJSONObject("item").getString("login")
+                channel.displayName = channelItem.getJSONObject("item").getString("displayName")
+                channel.backgroundImageUrl = channelItem.getJSONObject("item").getString("profileImageURL")
+                channel.profileImageURL = channelItem.getJSONObject("item").getString("profileImageURL")
+                channel.followersCount = channelItem.getJSONObject("item").getJSONObject("followers").getLong("totalCount")
+                listChannelsRowAdapter.add(channel)
+            }
+
+            for (i in 0 until videosJsonEdge.length()) {
+                val stream = Movie()
+                val streamItem = videosJsonEdge.getJSONObject(i)
+                stream.id = streamItem.getJSONObject("item").getLong("id")
+                stream.title = streamItem.getJSONObject("item").getString("title")
+                stream.studio = "Twitch"
+                stream.duration = streamItem.getJSONObject("item").getLong("lengthSeconds")
+                stream.backgroundImageUrl = streamItem.getJSONObject("item").getString("previewThumbnailURL")
+                stream.cardImageUrl = streamItem.getJSONObject("item").getString("previewThumbnailURL")
+                stream.videoUrl = "https://www.twitch.tv/videos/${streamItem.getJSONObject("item").getLong("id")}"
+
+                listStreamsRowAdapter.add(stream)
+            }
+
+            if (listChannelsRowAdapter.size() > 0) {
+                val channelsHeader = HeaderItem(0, "Channels")
+                val channelsRow = ListRow(channelsHeader, listChannelsRowAdapter)
+                adapter.add(channelsRow)
+            }
+            if (listStreamsRowAdapter.size() > 0) {
+                val streamsHeader = HeaderItem(0, "Streams")
+                val streamsRow = ListRow(streamsHeader, listStreamsRowAdapter)
+                adapter.add(streamsRow)
             }
         }
-        return true
-
     }
+
+
+    private fun setupEventListeners() {
+        setOnItemViewClickedListener(ItemViewClickedListener())
+    }
+    private inner class ItemViewClickedListener : OnItemViewClickedListener {
+        override fun onItemClicked(
+            itemViewHolder: Presenter.ViewHolder,
+            item: Any,
+            rowViewHolder: RowPresenter.ViewHolder,
+            row: Row
+        ) {
+            if (item is Movie) {
+                val intent = Intent(activity!!, PlaybackActivity::class.java)
+                intent.putExtra(PlaybackActivity.MOVIE, item)
+                intent.putExtra(PlaybackActivity.CONFIRMATION_PROMPT, false)
+                startActivity(intent)
+            }
+            else if (item is Channel) {
+                val intent = Intent(activity!!, ChannelActivity::class.java)
+                intent.putExtra(ChannelActivity.CHANNEL, item)
+                startActivity(intent)
+            }
+        }
+    }
+
+    companion object {
+        private val TAG = "SearchFragment"
+
+        private val GRID_ITEM_WIDTH = 300
+        private val GRID_ITEM_HEIGHT = 120
+        private val NUM_ROWS = 6
+        private val NUM_COLS = 4
+    }
+
 
 
 

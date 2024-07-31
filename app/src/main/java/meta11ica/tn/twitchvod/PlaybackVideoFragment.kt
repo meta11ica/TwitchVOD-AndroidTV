@@ -237,7 +237,6 @@ class PlaybackVideoFragment(private val watchFromPosition: Long = 0) : VideoSupp
 
         for ((resKey, resValue) in orderedResolutions) {
             var url: String? = null
-
             when {
                 broadcastType == "highlight" -> {
                     url = "https://$domain/$vodSpecialID/$resKey/highlight-${vodId}.m3u8"
@@ -293,6 +292,8 @@ $url"""
     }
 
     fun isValidQuality(url: String): Boolean {
+        Log.d("1111111111","url: $url")
+
         val connection = URL(url).openConnection()
 
         try {

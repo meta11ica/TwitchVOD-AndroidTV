@@ -58,6 +58,7 @@ class MainFragment : BrowseSupportFragment() {
     private var mBackgroundTimer: Timer? = null
     private var mBackgroundUri: String? = null
     private lateinit var sharedPrefs: SharedPreferences
+    private var historyLength = 0
     // Register a BroadcastReceiver to listen for SharedPreferences changes
     val receiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -79,6 +80,8 @@ class MainFragment : BrowseSupportFragment() {
         super.onActivityCreated(savedInstanceState)
 
         prepareBackgroundManager()
+        historyLength = resources.getInteger(R.integer.maximum_history_size)
+
 
         setupUIElements()
         loadRows()
@@ -87,14 +90,14 @@ class MainFragment : BrowseSupportFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         // Register the BroadcastReceiver in onViewCreated
         val filter = IntentFilter("com.example.SHARED_PREF_CHANGED")
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             requireActivity().registerReceiver(receiver, filter, Context.RECEIVER_NOT_EXPORTED)
         } else {
             requireActivity().registerReceiver(receiver, filter)
-        }    }
+        }
+    }
 
     override fun onDestroy() {
         super.onDestroy()
@@ -346,12 +349,12 @@ class MainFragment : BrowseSupportFragment() {
 
     fun updateWatchList() {
         listRowStreamContinueWatchAdapter.clear()
-        val strExistingWatchList = sharedPrefs?.getString("watchList", "")
+        val strExistingWatchList = sharedPrefs.getString("watchList", "")
         val streamWatchList: MutableList<Movie> = arrayListOf()
 
         if (!strExistingWatchList.isNullOrEmpty()) {
             val watchList = JSONArray(strExistingWatchList)
-            val historyLength = resources.getInteger(R.integer.maximum_history_size)
+            //val historyLength = 99
             for (i in watchList.length() - 1 downTo max(0, watchList.length() - historyLength)) {
                 val streamElement = Movie.stringToMovie(watchList.getString(i))
                 streamElement.progress =

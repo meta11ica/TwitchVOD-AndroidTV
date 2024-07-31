@@ -1,0 +1,21 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:maxHeight="56dp"
+    android:maxWidth="56dp"
+    android:minHeight="48dp"
+    android:minWidth="48dp"
+    android:layout_width="48dp"
+    android:layout_height="48dp"
+    android:layout_gravity="start"
+    android:layout_marginLeft="48dp"
+    android:layout_marginTop="48dp"
+    android:background="@drawable/circle_button_selector">
+
+    <ImageView
+        android:id="@+id/backArrowIcon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:src="@drawable/ic_back_arrow"
+        />
+
+</FrameLayout>
