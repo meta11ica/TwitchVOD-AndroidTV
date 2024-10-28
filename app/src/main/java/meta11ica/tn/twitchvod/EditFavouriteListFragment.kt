@@ -128,7 +128,7 @@ class EditFavouriteListFragment : Fragment() {
                 ?.commit()
             Toast.makeText(
                 requireContext(),
-                "$streamer added to favourites!",
+                "$streamer ${resources.getString(R.string.added_to_favourites)}",
                 Toast.LENGTH_SHORT
             ).show()
             // Notify adapter about the added item
@@ -137,13 +137,13 @@ class EditFavouriteListFragment : Fragment() {
             if (streamerExists) {
                 Toast.makeText(
                     requireContext(),
-                    "$streamer already exists in favourites!",
+                    "$streamer ${resources.getString(R.string.streamer_already_exists)}",
                     Toast.LENGTH_SHORT
                 ).show()
             } else {
                 Toast.makeText(
                     requireContext(),
-                    "Streamer name cannot be empty!",
+                    resources.getString(R.string.streamer_cannot_be_empty),
                     Toast.LENGTH_SHORT
                 ).show()
             }
@@ -162,7 +162,7 @@ class EditFavouriteListFragment : Fragment() {
                     ?.commit();
                 Toast.makeText(
                     requireContext(),
-                    "$streamer removed from favourites!",
+                    "$streamer ${resources.getString(R.string.removed_from_favourites)}",
                     Toast.LENGTH_SHORT
                 ).show()
                 adapter.notifyItemRemoved(removedIndex)
@@ -170,7 +170,7 @@ class EditFavouriteListFragment : Fragment() {
         } else {
             Toast.makeText(
                 requireContext(),
-                "$streamer not removed! List must contain at least one.",
+                "$streamer ${resources.getString(R.string.error_removed_from_favourites)}",
                 Toast.LENGTH_SHORT
             ).show()
         }

@@ -1,8 +1,10 @@
 package meta11ica.tn.twitchvod
 
 import android.content.Intent
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.view.View
+import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.leanback.app.SearchSupportFragment
 import androidx.leanback.widget.ArrayObjectAdapter
@@ -21,6 +23,8 @@ class SearchFragment : SearchSupportFragment(), SearchSupportFragment.SearchResu
     private lateinit var adapter: ArrayObjectAdapter
     var screenWidth: Int = 0
     var screenHeight: Int = 0
+    private lateinit var sharedPrefs: SharedPreferences
+
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -47,6 +51,12 @@ class SearchFragment : SearchSupportFragment(), SearchSupportFragment.SearchResu
         val intent = Intent(this.activity, MainActivity::class.java)
         startActivity(intent)
     }
+    private fun refreshMainFragment() {
+        // Replace the current fragment with MainFragment
+        this.activity?.finish()
+        val intent = Intent(this.activity, SplashActivity::class.java)
+        startActivity(intent)
+    }
 
     override fun getResultsAdapter(): ObjectAdapter {
             adapter = ArrayObjectAdapter(ListRowPresenter())
@@ -67,7 +77,10 @@ class SearchFragment : SearchSupportFragment(), SearchSupportFragment.SearchResu
 
     private fun searchTwitch(query: String) {
         val listStreamsRowAdapter = ArrayObjectAdapter(StreamPresenter(screenWidth/(NUM_COLS +1),screenHeight*7/24))
-        val listChannelsRowAdapter = ArrayObjectAdapter(ChannelPresenter(screenWidth/(NUM_COLS +1),screenHeight*7/24))
+        val listChannelsRowAdapter = ArrayObjectAdapter(ChannelPresenter(screenWidth/(NUM_COLS +1),screenHeight*7/24) { channel ->
+            // Handle long-press action here
+            showLongPressOptions(channel)
+        })
 
         // Iterate over the map and add items to the adapter
         if (query.isNotEmpty()) {
@@ -143,6 +156,37 @@ class SearchFragment : SearchSupportFragment(), SearchSupportFragment.SearchResu
             }
         }
     }
+
+    private fun showLongPressOptions(channel: Channel) {
+        // Display options for the channel on long-press, e.g., show a dialog
+        // For example:
+        sharedPrefs = requireActivity().getSharedPreferences("Streamers",  0)!!
+        val streamerId:MutableList<String> = sharedPrefs.getString("favourite_streamers", "micode")?.split(",")!!.toMutableList()
+
+        // Find the first matching element, ignoring case
+        val streamerToRemove = streamerId.firstOrNull { it.equals(channel.login, ignoreCase = true) }
+
+        if (streamerToRemove != null) {
+            if(streamerId.size < 2) {
+                Toast.makeText(context,"${channel.login} ${resources.getString(R.string.error_removed_from_favourites)}", Toast.LENGTH_SHORT).show()
+            }
+            else {
+                streamerId.remove(streamerToRemove)
+                Toast.makeText(context, "${channel.login} ${resources.getString(R.string.removed_from_favourites)}", Toast.LENGTH_SHORT).show()
+            }
+        }
+        else {
+            streamerId.add(channel.login!!)
+            Toast.makeText(context, "${channel.login} ${resources.getString(R.string.added_to_favourites)}", Toast.LENGTH_SHORT).show()
+        }
+
+        sharedPrefs.edit().putString("favourite_streamers",streamerId.joinToString(separator=",")).apply()
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) {
+            // Navigate back to MainFragment
+            refreshMainFragment()
+        }
+    }
+
 
     companion object {
         private val TAG = "SearchFragment"

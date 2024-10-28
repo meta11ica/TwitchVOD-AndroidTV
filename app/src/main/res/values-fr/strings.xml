@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="related_movies">Vidéos associées</string>
+    <string name="edit_favourite_list">Editer les favoris</string>
+    <string name="watch_trailer_1">REGARDER</string>
+    <string name="movie">Film</string>
+    <string name="active_favourite_streamers">Streamers favoris</string>
+    <string name="guideline_edit_favourite_list">Cliquez sur un streamer pour supprimer. Cherchez un streamer pour l\'ajouter à la liste</string>
+    <string name="error_fragment_message">Une erreur est survenue</string>
+    <string name="dismiss_error">Ignorer</string>
+    <string name="next">Suivant</string>
+    <string name="previous">Précédent</string>
+    <string name="header_continue_watching">Continuer</string>
+    <string name="update_channel_name">Mettre à jour l\'app</string>
+    <string name="update_channel_description">Afficher les notifications</string>
+    <string name="latest_version_already">Dernière version déjà installée</string>
+    <string name="error_installing_apk">Erreur dans l\'installation du APK</string>
+    <string name="clear_watch_history">Vider l\'historique</string>
+    <string name="success_clear_history">Historique vidé avec succès!</string>
+    <string name="removed_from_favourites">supprimé.e des favoris</string>
+    <string name="error_removed_from_favourites">laissé.e! Les favoris doivent contenir au moins un élément.</string>
+    <string name="added_to_favourites">ajouté.e aux favoris!</string>
+    <string name="streamer_already_exists">existe déjà dans les favoris!</string>
+    <string name="streamer_cannot_be_empty">Le nom du streamer ne peut pas être vide!</string>
+</resources>
