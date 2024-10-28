@@ -20,7 +20,9 @@ import androidx.leanback.app.VideoSupportFragmentGlueHost
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MimeTypes
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.hls.HlsMediaSource
 import khttp.post
 import org.json.JSONObject
 import java.net.URL
@@ -62,23 +64,27 @@ class PlaybackVideoFragment(private val watchFromPosition: Long = 0) : VideoSupp
         val videoUrl = movie.videoUrl
 
         val policy = StrictMode.ThreadPolicy.Builder().permitAll().build()
-
         StrictMode.setThreadPolicy(policy)
             var finalVideoUrl = videoUrl
             if (videoUrl != null && !videoUrl.contains("api/channel/hls")) {
                 finalVideoUrl = getFinalVideoUrl(videoUrl)
             }
-            player =  ExoPlayer.Builder(requireContext()).build()
-            val playerAdapter = LeanbackPlayerAdapter(requireContext(),player,500)
-            mTransportControlGlue = BasicTransportControlsGlue(requireContext(), playerAdapter,movie,isVod)
-            mTransportControlGlue.host = VideoSupportFragmentGlueHost(this@PlaybackVideoFragment)
-            //movie.videoUrl = finalVideoUrl
-            val mediaItem = MediaItem.Builder()
-                .setUri(finalVideoUrl)
-                .setMimeType(MimeTypes.APPLICATION_M3U8)
-                .build()
 
-        player.setMediaItem(mediaItem)
+        player =  ExoPlayer.Builder(requireContext()).build()
+        val defaultDataSourceFactory = DefaultDataSource.Factory(requireContext())
+        val customDataSourceFactory = TwitchUnmutedDataSourceFactory(defaultDataSourceFactory)
+        val playerAdapter = LeanbackPlayerAdapter(requireContext(),player,500)
+        mTransportControlGlue = BasicTransportControlsGlue(requireContext(), playerAdapter,movie,isVod)
+        mTransportControlGlue.host = VideoSupportFragmentGlueHost(this@PlaybackVideoFragment)
+        //movie.videoUrl = finalVideoUrl
+        val mediaItem = MediaItem.Builder()
+            .setUri(finalVideoUrl)
+            .setMimeType(MimeTypes.APPLICATION_M3U8)
+            .build()
+        val mediaSource = HlsMediaSource.Factory(customDataSourceFactory)
+            .createMediaSource(mediaItem)
+
+        player.setMediaSource(mediaSource)
         player.seekTo(0, watchFromPosition)
 
         player.prepare()
@@ -292,18 +298,15 @@ $url"""
     }
 
     fun isValidQuality(url: String): Boolean {
-        Log.d("1111111111","url: $url")
 
         val connection = URL(url).openConnection()
 
         try {
             val response = connection.getInputStream()
 
-            if (response != null) {
-                response.bufferedReader().use { reader ->
-                    val data = reader.readText()
-                    return data.contains(".ts")
-                }
+            response?.bufferedReader()?.use { reader ->
+                val data = reader.readText()
+                return data.contains(".ts")
             }
         } catch (e: Exception) {
             // Handle any exceptions if necessary
