@@ -73,6 +73,7 @@
         vestibulum. Fusce dictum libero quis erat maximus, vitae volutpat diam dignissim.
     </string>
     <string name="clear_watch_history">Clear watch history</string>
+    <string name="refresh_live">Refresh Live</string>
     <string name="success_clear_history">History cleared successfully!</string>
     <string name="removed_from_favourites">removed from favourites!</string>
     <string name="error_removed_from_favourites">not removed! Favourites must contain at least one element.</string>

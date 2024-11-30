@@ -16,6 +16,7 @@
     <string name="latest_version_already">Dernière version déjà installée</string>
     <string name="error_installing_apk">Erreur dans l\'installation du APK</string>
     <string name="clear_watch_history">Vider l\'historique</string>
+    <string name="refresh_live">Rafraîchir les lives</string>
     <string name="success_clear_history">Historique vidé avec succès!</string>
     <string name="removed_from_favourites">supprimé.e des favoris</string>
     <string name="error_removed_from_favourites">laissé.e! Les favoris doivent contenir au moins un élément.</string>

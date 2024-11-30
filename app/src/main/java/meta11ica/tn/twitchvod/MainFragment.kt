@@ -1,5 +1,6 @@
 package meta11ica.tn.twitchvod
 
+import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -9,11 +10,10 @@ import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.os.Build
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.util.DisplayMetrics
 import android.util.Log
 import android.view.Gravity
+import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
@@ -24,24 +24,20 @@ import androidx.core.content.FileProvider
 import androidx.fragment.app.FragmentActivity
 import androidx.leanback.app.BackgroundManager
 import androidx.leanback.app.BrowseSupportFragment
+import androidx.leanback.app.HeadersSupportFragment.OnHeaderClickedListener
 import androidx.leanback.widget.ArrayObjectAdapter
 import androidx.leanback.widget.HeaderItem
-import androidx.leanback.widget.ImageCardView
 import androidx.leanback.widget.ListRow
 import androidx.leanback.widget.ListRowPresenter
 import androidx.leanback.widget.OnItemViewClickedListener
-import androidx.leanback.widget.OnItemViewSelectedListener
 import androidx.leanback.widget.Presenter
 import androidx.leanback.widget.Row
+import androidx.leanback.widget.RowHeaderPresenter
 import androidx.leanback.widget.RowPresenter
-import com.bumptech.glide.Glide
-import com.bumptech.glide.request.target.SimpleTarget
-import com.bumptech.glide.request.transition.Transition
 import com.example.twitchvod.EditFavouriteListFragment
 import org.json.JSONArray
 import java.io.File
 import java.util.Timer
-import java.util.TimerTask
 import kotlin.math.max
 import kotlin.math.min
 
@@ -51,16 +47,17 @@ import kotlin.math.min
  */
 class MainFragment : BrowseSupportFragment() {
 
-    private val mHandler = Handler(Looper.myLooper()!!)
     private lateinit var mBackgroundManager: BackgroundManager
     private var mDefaultBackground: Drawable? = null
     private lateinit var mMetrics: DisplayMetrics
     private var mBackgroundTimer: Timer? = null
-    private var mBackgroundUri: String? = null
     private lateinit var sharedPrefs: SharedPreferences
     private var historyLength = 0
+    private var extraHeadersIndex = 0
+    private var headerIndex = 0
+
     // Register a BroadcastReceiver to listen for SharedPreferences changes
-    val receiver = object : BroadcastReceiver() {
+    private val receiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             if (intent?.action == "com.example.SHARED_PREF_CHANGED") {
                 // Update UI or take necessary action
@@ -72,7 +69,7 @@ class MainFragment : BrowseSupportFragment() {
     }
 
 
-    val listRowStreamContinueWatchAdapter = ArrayObjectAdapter(StreamPresenter())
+    private val listRowStreamContinueWatchAdapter = ArrayObjectAdapter(StreamPresenter())
     val rowsAdapter = ArrayObjectAdapter(ListRowPresenter())
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
@@ -88,6 +85,16 @@ class MainFragment : BrowseSupportFragment() {
         setupEventListeners()
     }
 
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        val view = super.onCreateView(inflater, container, savedInstanceState)
+        return view
+    }
+
+    @SuppressLint("UnspecifiedRegisterReceiverFlag")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         // Register the BroadcastReceiver in onViewCreated
@@ -117,7 +124,7 @@ class MainFragment : BrowseSupportFragment() {
     private fun setupUIElements() {
         title = getString(R.string.browse_title)
         // over title
-        headersState = BrowseSupportFragment.HEADERS_ENABLED
+        headersState = HEADERS_ENABLED
         isHeadersTransitionOnBackEnabled = true
 
         // set fastLane (or headers) background color
@@ -130,7 +137,6 @@ class MainFragment : BrowseSupportFragment() {
 
         sharedPrefs = requireActivity().getSharedPreferences("Streamers",  0)!!
 
-        var headerIndex = 0
 
         try {
             updateWatchList()
@@ -141,33 +147,39 @@ class MainFragment : BrowseSupportFragment() {
             )
             rowsAdapter.add(ListRow(header, listRowStreamContinueWatchAdapter))
             headerIndex++
+            extraHeadersIndex++
 
         } catch(e : Exception)
         {
             Toast.makeText(requireActivity(), "Problem loading history, please erase the history.", Toast.LENGTH_SHORT)
                 .show()
         }
+        /*
+        val refreshHeader = HeaderItem(
+            headerIndex.toLong(),
+            "Refresh"
+        )
+        rowsAdapter.add(ListRow(refreshHeader, ArrayObjectAdapter()))
+        headerIndex++
+        extraHeadersIndex++
+        */
 
-
-        val list = JSONArray(sharedPrefs?.getString("movies","empty"))
+        val list = JSONArray(sharedPrefs.getString("movies","empty"))
         val cardPresenter = StreamPresenter()
         for (i in 0 until list.length()) {
-            if (i != 0) {
-                //Collections.shuffle(list)
-            }
             val streamer = list.getJSONObject(i)
             val listRowAdapter = ArrayObjectAdapter(cardPresenter)
             for (j in 0 until min(NUM_COLS,JSONArray(streamer.getString("streams")).length())) {
-                val stream = JSONArray(streamer.getString("streams"))?.getJSONObject(j)
+                val stream = JSONArray(streamer.getString("streams")).getJSONObject(j)
                 val movie = Movie()
                 movie.id = stream?.getLong("id")!!
                 movie.duration = stream.getLong("duration")
-                movie.title = stream?.getString("title")
-                movie.description = stream?.getString("description")
-                movie.studio = stream?.getString("studio")
-                movie.cardImageUrl = stream?.getString("cardImageUrl")
-                movie.backgroundImageUrl = stream?.getString("bgImageUrl")
-                movie.videoUrl = stream?.getString("videoUrl")
+                movie.title = stream.getString("title")
+                movie.description = stream.getString("description")
+                movie.studio = stream.getString("studio")
+                movie.cardImageUrl = stream.getString("cardImageUrl")
+                movie.backgroundImageUrl = stream.getString("bgImageUrl")
+                movie.videoUrl = stream.getString("videoUrl")
 
                 listRowAdapter.add(movie)
             }
@@ -181,10 +193,9 @@ class MainFragment : BrowseSupportFragment() {
         val mGridPresenter = GridItemPresenter()
         val gridRowAdapter = ArrayObjectAdapter(mGridPresenter)
         gridRowAdapter.add(resources.getString(R.string.update_channel_name))
-        //gridRowAdapter.add(resources.getString(R.string.grid_view))
-        //gridRowAdapter.add(getString(R.string.error_fragment))
         gridRowAdapter.add(resources.getString(R.string.edit_favourite_list))
         gridRowAdapter.add(resources.getString(R.string.clear_watch_history))
+        gridRowAdapter.add(resources.getString(R.string.refresh_live))
         rowsAdapter.add(ListRow(gridHeader, gridRowAdapter))
 
         adapter = rowsAdapter
@@ -199,8 +210,31 @@ class MainFragment : BrowseSupportFragment() {
                 ?.replace(R.id.main_browse_fragment, SearchFragment())
                 ?.commit()
         }
+        val headersFragment = headersSupportFragment
 
+        headersFragment.setOnHeaderClickedListener(HeaderClickedListener())
         onItemViewClickedListener = ItemViewClickedListener()
+    }
+
+    private inner class HeaderClickedListener : OnHeaderClickedListener {
+        override fun onHeaderClicked(viewHolder: RowHeaderPresenter.ViewHolder?, row: Row?) {
+            if (row != null) {
+                val selectedRow = row.headerItem.name
+                if(selectedRow=="Refresh") {
+                    val intent = Intent(
+                        this@MainFragment.requireActivity(),
+                        SplashActivity::class.java
+                    )
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY)
+                    startActivity(intent)
+                    this@MainFragment.requireActivity().finish()
+                }
+                else {
+                    startHeadersTransition(false)
+                }
+            }
+        }
+
     }
 
     private inner class ItemViewClickedListener : OnItemViewClickedListener {
@@ -222,9 +256,9 @@ class MainFragment : BrowseSupportFragment() {
 
                     val intent = Intent(activity!!, DetailsActivity::class.java)
                     intent.putExtra(DetailsActivity.MOVIE, item)
-                    intent.putExtra(DetailsActivity.ROW, row.id - 1)
+                    intent.putExtra(DetailsActivity.ROW, row.id - extraHeadersIndex)
 
-                    val bundle = (itemViewHolder.view as CustomImageCardView).mainImage?.let {
+                    val bundle = (itemViewHolder.view as CustomImageCardView).mainImage.let {
                         ActivityOptionsCompat.makeSceneTransitionAnimation(
                             activity!!,
                             it,
@@ -235,15 +269,20 @@ class MainFragment : BrowseSupportFragment() {
                     startActivity(intent, bundle)
                 }
             } else if (item is String) {
-                /*if (item.contains(getString(R.string.error_fragment))) {
-                    val intent = Intent(activity!!, BrowseErrorActivity::class.java)
-                    startActivity(intent)
-                }*/
                 if (item.contains(getString(R.string.edit_favourite_list))) {
                     resetBackground(activity)
                     activity?.supportFragmentManager?.beginTransaction()
                         ?.replace(R.id.main_browse_fragment, EditFavouriteListFragment())
                         ?.commit()
+                }
+                if (item.contains(getString(R.string.refresh_live))) {
+                    val intent = Intent(
+                        requireActivity(),
+                        SplashActivity::class.java
+                    )
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY)
+                    startActivity(intent)
+                    requireActivity().finish()
                 }
                 else if (item.contains(getString(R.string.clear_watch_history))) {
                     val watchList = if (sharedPrefs.contains("watchList")) JSONArray(
@@ -317,7 +356,7 @@ class MainFragment : BrowseSupportFragment() {
 
 
     private inner class GridItemPresenter : Presenter() {
-        override fun onCreateViewHolder(parent: ViewGroup): Presenter.ViewHolder {
+        override fun onCreateViewHolder(parent: ViewGroup): ViewHolder {
             val view = TextView(parent.context)
             view.layoutParams = ViewGroup.LayoutParams(GRID_ITEM_WIDTH, GRID_ITEM_HEIGHT)
             view.isFocusable = true
@@ -325,7 +364,7 @@ class MainFragment : BrowseSupportFragment() {
             view.setBackgroundColor(ContextCompat.getColor(activity!!, R.color.default_background))
             view.setTextColor(Color.WHITE)
             view.gravity = Gravity.CENTER
-            return Presenter.ViewHolder(view)
+            return ViewHolder(view)
         }
 
         override fun onBindViewHolder(viewHolder: ViewHolder, item: Any?) {
@@ -333,7 +372,7 @@ class MainFragment : BrowseSupportFragment() {
         }
 
 
-        override fun onUnbindViewHolder(viewHolder: Presenter.ViewHolder) {}
+        override fun onUnbindViewHolder(viewHolder: ViewHolder) {}
     }
 
     fun resetBackground(activity: FragmentActivity?)
@@ -372,7 +411,7 @@ class MainFragment : BrowseSupportFragment() {
         listRowStreamContinueWatchAdapter.notifyArrayItemRangeChanged(0, listRowStreamContinueWatchAdapter.size())
     }
 
-    fun getLastXObjects(jsonArray: JSONArray,historyLength: Int): JSONArray {
+    private fun getLastXObjects(jsonArray: JSONArray, historyLength: Int): JSONArray {
         val length = jsonArray.length()
         val resultArray = JSONArray()
 
@@ -387,12 +426,11 @@ class MainFragment : BrowseSupportFragment() {
     }
 
     companion object {
-        private val TAG = "MainFragment"
+        private const val TAG = "MainFragment"
 
-        private val BACKGROUND_UPDATE_DELAY = 300
-        private val GRID_ITEM_WIDTH = 200
-        private val GRID_ITEM_HEIGHT = 200
-        private val NUM_ROWS = 6
-        private val NUM_COLS = 15
+        private const val GRID_ITEM_WIDTH = 200
+        private const val GRID_ITEM_HEIGHT = 200
+        private const val NUM_ROWS = 6
+        private const val NUM_COLS = 15
     }
 }
